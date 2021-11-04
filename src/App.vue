@@ -1,28 +1,50 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <router-view></router-view>
+    <div>
+      <button @click="jumpHelloWorld">go helloWorld</button>
+    </div>
+    <div>
+      <button @click="jumpGif">go gif</button>
+    </div>
+    <div>
+      <button @click="jumpNewGif">go newGif</button>
+    </div>
   </div>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
+<script >
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    // HelloWorld
+  },
+  data(){
+    return {
+      message:'Welcome to Your Vue.js App',
+      text:'你好，我是大傻',
+      obj: {
+        name:"大傻",
+        age: 12
+      }
+    }
+  },
+
+  methods: {
+
+    jumpHelloWorld(){
+        this.$router.push({path:'/helloWorld'})
+    },
+
+    jumpGif(){
+       this.$router.push({path:'/gif'})
+    },
+
+    jumpNewGif(){
+       this.$router.push({path:'/newGif'})
+    }
+  
   }
 }
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
