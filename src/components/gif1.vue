@@ -19,7 +19,7 @@
           left: 100px;
         "
       >
-        <img ref="img1" src="../assets/nice.gif" alt="" />
+        <img ref="img1" src="https://prod-media-luban.oss-cn-shanghai.aliyuncs.com/kvc6uzvyvz1mf09.gif" alt="" />
       </div>
 
       <div
@@ -31,7 +31,7 @@
           left: 430px;
         "
       >
-        <img ref="img2" src="../assets/hot.gif" alt="" />
+        <img ref="img2" src="https://prod-media-luban.oss-cn-shanghai.aliyuncs.com/kvc6uzvyvz1mf09.gif" alt="" />
       </div>
     </div>
 

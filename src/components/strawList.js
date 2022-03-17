@@ -29,5 +29,4 @@ export const strawList = [
   //   height: 200,
   // },
 ]
-      
-    
+

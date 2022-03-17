@@ -4,18 +4,11 @@ import VueRouter from 'vue-router';
 
 import HelloWorld from '../components/HelloWorld.vue';
 
-import Gif from '../components/gif.vue'
-
-
 Vue.use(VueRouter)
 
 let router = new VueRouter({
   routes: [
-    {
-      path: '/gif',
-      name: 'gif',
-      component: Gif
-    },
+
     {
       path: '/gif1',
       name: 'gif1',
@@ -36,15 +29,50 @@ let router = new VueRouter({
       name: 'helloWorld',
       component: HelloWorld
     },
-     {
+    {
       path: '/gif2',
       name: 'gif2',
-      component: ()=>import('../components/gif2.vue')
+      component: () => import('../components/gif2.vue')
     },
     {
-       path: '/parsePsd',
-       name: 'parsePsd',
-      component:()=>import('../components/parsePsd.vue')
+      path: '/parsePsd',
+      name: 'parsePsd',
+      component: () => import('../components/parsePsd.vue')
+    },
+    {
+      path: '/editor',
+      name: 'editor',
+      component: () => import('../components/monaco-editor.vue')
+    },
+    {
+      path: '/stroke',
+      name: 'stroke',
+      component: () => import('../components/canvasStroke.vue')
+    },
+    {
+      path: '/demo',
+      name: 'demo',
+      component: () => import('../components/demo.vue')
+    },
+    {
+      path: '/progress',
+      name: 'progress',
+      component: () => import('../components/progress.vue')
+    },
+    {
+      path: '/scroll',
+      name: 'scroll',
+      component: () => import('../components/scroll.vue'),
+    },
+    {
+      path: '/editorTest',
+      name: 'editorTest',
+      component: () => import('../components/editor-test.vue')
+    },
+    {
+      path: '/pixi',
+      name: 'pixi',
+      component: () => import('../components/pixi.vue')
     }
   ]
 })

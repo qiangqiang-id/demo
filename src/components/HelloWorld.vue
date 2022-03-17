@@ -1,28 +1,17 @@
 <template>
-  <div class="hello">
-    <h2>{{ value.name }}</h2>
-    <h2>{{ value.age }}</h2>
-  </div>
+  <!-- <div class="hello">{{ $attrs }}</div> -->
+  <div></div>
 </template>
 
 
 <script>
 export default {
-  name: 'HelloWorld',
+  name: "HelloWorld",
 
-  props: {
-    msg: String,
-    value:{
-      type: Object,
-      default:()=>({name:'zhangsan',age:10})
-    }
-  },
+  props: {},
 
-  
-  methods: {
-    
-  }
-}
+  methods: {},
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
