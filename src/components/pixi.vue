@@ -23,41 +23,34 @@ export default {
         resolution: 1,
       });
 
-      const container = document.getElementById("pixi-container");
+      const box = document.getElementById("pixi-container");
 
-      container.appendChild(app.view);
+      box.appendChild(app.view);
 
-      console.log(app);
+      // const container = new PIXI.Container();
+      // console.log(app.screen.width);
+      // container.x = 0;
+      // container.y = 0;
+
+      const sprite = PIXI.Sprite.from(
+        "https://st0.dancf.com/gaoding-material/0/images/223463/20191107-203726-aUYH9.jpg"
+      );
+
+      // container.addChild(bgFront);
+
+      // app.stage.addChild(container);
 
       // load the texture we need
-      app.loader
-        .add(
-          "bunny",
-          "https://st0.dancf.com/gaoding-material/0/images/223463/20191107-203726-aUYH9.jpg"
-        )
-        .load((loader, resources) => {
-          console.log(loader, resources);
-          // This creates a texture from a 'bunny.png' image
-          const bunny = new PIXI.Sprite(resources.bunny.texture);
 
-          // Setup the position of the bunny
-          bunny.x = 0;
-          bunny.y = 0;
-          // bunny.scale.x = ;
+      const graphics = new PIXI.Graphics();
+      // graphics.beginFill(0xff3300);
+      graphics.drawRect(0, 0, 200, 200);
+      graphics.endFill();
 
-          // Rotate around the center
-          bunny.anchor.x = 0;
-          bunny.anchor.y = 0;
+      // const sprite = new PIXI.Sprite(texture);
+      sprite.mask = graphics;
 
-          // Add the bunny to the scene we are building
-          app.stage.addChild(bunny);
-
-          // Listen for frame updates
-          app.ticker.add(() => {
-            // each frame pin the bunny around a bit
-            // bunny.rotation += 0.01;
-          });
-        });
+      app.stage.addChild(sprite);
     },
   },
 };

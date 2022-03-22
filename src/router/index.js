@@ -67,7 +67,7 @@ let router = new VueRouter({
     {
       path: '/editorTest',
       name: 'editorTest',
-      component: () => import('../components/editor-test.vue')
+      component: () => import('../editor/editor-test.vue')
     },
     {
       path: '/pixi',

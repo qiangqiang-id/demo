@@ -1,7 +1,6 @@
 <template>
   <div class="box">
     <el-button @click="handleReverse" class="reverse">反转</el-button>
-    <el-button @click="changeWidth">增加一个宽度</el-button>
 
     <div id="editor-area">
       <Actor
@@ -23,9 +22,9 @@
 
 <script>
 import * as PIXI from "pixi.js";
-import Actor from "../operation/actor.vue";
-import ActorDress from "../operation/ActorDress";
-import { calcRotatedPoint } from "../operation/drag";
+import Actor from "./actor.vue";
+import ActorDress from "./ActorDress";
+import { calcRotatedPoint } from "./drag";
 const actorList = [
   {
     id: 1,
@@ -47,6 +46,16 @@ const actorList = [
       x: 0,
       y: 0,
     },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 267,
+      anchor: {
+        x: 0,
+        y: 0,
+      },
+    },
   },
   {
     id: 2,
@@ -67,6 +76,16 @@ const actorList = [
       x: 0,
       y: 0,
     },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 267,
+      anchor: {
+        x: 0,
+        y: 0,
+      },
+    },
   },
 ];
 
@@ -82,6 +101,9 @@ export default {
     return {
       actorList,
       selectedIndex: 1,
+      thing: null,
+      bunny: null,
+      ObservePoint: null,
     };
   },
 
@@ -106,12 +128,6 @@ export default {
 
   mounted() {
     this.runPixi();
-
-    // const reverse = document.querySelector(".reverse");
-
-    setTimeout(() => {
-      // reverse && reverse.click();
-    }, 100);
   },
 
   methods: {
@@ -125,10 +141,16 @@ export default {
     handleMousemove(e) {
       const data = this.actorList[this.selectedIndex];
 
+      const x = data.x + e.movementX;
+      const y = data.y + e.movementY;
+
       Object.assign(data, {
-        x: data.x + e.movementX,
-        y: data.y + e.movementY,
+        x,
+        y,
       });
+
+      data.mask.x = x;
+      data.mask.y = y;
     },
 
     handleMouseup() {
@@ -138,9 +160,7 @@ export default {
 
     handleReverse() {
       const data = this.actorList[this.selectedIndex];
-
       const x = !data.isReverse ? data.x + data.width : data.x - data.width;
-
       const poi = calcRotatedPoint(
         {
           x: x,
@@ -150,21 +170,36 @@ export default {
           x: data.x,
           y: data.y,
         },
-        (data.rotate * 180) / Math.PI
+        data.rotate
       );
 
-      console.log("position", poi);
+      const mask = data.mask;
+      const maskX = !data.isReverse ? mask.x + mask.width : mask.x - mask.width;
+      const maskPoi = calcRotatedPoint(
+        {
+          x: maskX,
+          y: mask.y,
+        },
+        {
+          x: mask.x,
+          y: mask.y,
+        },
+        data.rotate
+      );
 
       Object.assign(data, {
         isReverse: !data.isReverse,
         ...poi,
       });
+
+      Object.assign(mask, { ...maskPoi });
     },
 
-    updateHandler(newValue) {
+    updateHandler(newValue, maskValue) {
       const data = this.actorList[this.selectedIndex];
 
       Object.assign(data, newValue);
+      maskValue && Object.assign(data.mask, maskValue);
 
       data.scale = {
         x: data.width / data.originWidth,
@@ -196,11 +231,17 @@ export default {
         // console.log(loader, resources);
         // This creates a texture from a 'bunny.png' image
         this.bunny = new PIXI.Sprite(resources.bunny.texture);
+        this.thing = new PIXI.Sprite(resources.bunny.texture);
+        this.container = new PIXI.Container();
 
-        // Setup the position of the bunny
+        // this.bunny.mask = this.thing;
 
+        this.bunny.filters = [new PIXI.SpriteMaskFilter(this.thing)];
+
+        // this.thing.rotation = 30 * (Math.PI / 180);
         this.setData(data);
 
+        // this.container.addChild(this.bunny);
         // Add the bunny to the scene we are building
         this.app.stage.addChild(this.bunny);
 
@@ -212,16 +253,44 @@ export default {
       });
     },
 
-    setData(data) {
-      let { x, y, rotate, scale, isReverse, anchor } = data;
-      const angle = rotate * (Math.PI / 180);
-      const scaleX = isReverse ? scale.x * -1 : scale.x;
-
-      this.bunny.x = x;
-      this.bunny.y = y;
-      this.bunny.scale.set(scaleX, scale.y);
-      this.bunny.rotation = angle;
-      this.bunny.anchor.set(anchor.x, anchor.y);
+    setData() {
+      // let { height, width, x, y, rotate, scale, isReverse, anchor } = data;
+      // const rotation = rotate * (Math.PI / 180);
+      // const scaleX = isReverse ? -scale.x : scale.x;
+      // const originX = x + width * anchor.x;
+      // const originY = y + height * anchor.y;
+      // 设置容器
+      // this.container.x = x;
+      // this.container.y = y;
+      // this.container.position.set(x, y);
+      // this.container.width = width;
+      // this.container.height = height;
+      // this.container.rotation = rotation;
+      // this.container.pivot = this.ObservePoint;
+      // this.container.pivot.y = anchor.y;
+      // 设置属性
+      // this.bunny.position.set(x, y);
+      // this.bunny.anchor.set(anchor.x, anchor.y);
+      // this.bunny.scale.set(scaleX, scale.y);
+      // this.bunny.rotation = rotation;
+      // 图形设置
+      // this.thing.clear();
+      // this.thing.beginFill(0xff3300);
+      // this.thing.rotation = rotation;
+      // 设置pivot drawRect的x，y不生效
+      // this.thing.pivot.x = originX;
+      // this.thing.pivot.y = originY;
+      // this.thing.x = x;
+      // this.thing.y = y;
+      // this.thing.drawRect(x, y, width, height);
+      // this.thing.lineStyle(5, 0xff0000);
+      // this.thing.endFill();
+      // this.bunny.alpha = 1;
+      // this.bunny.thing = 0;
+      // this.thing.position.set(x, y);
+      // this.thing.anchor.set(anchor.x, anchor.y);
+      // this.thing.scale.set(scaleX, scale.y);
+      // this.thing.rotation = rotation;
     },
   },
 };
