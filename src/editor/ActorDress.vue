@@ -180,8 +180,7 @@ export default {
       const x = data.isReverse ? data.x - data.width : data.x;
 
       const anchor = this.getAnchor();
-
-      console.log("anchor", anchor);
+      // 计算出新锚点的x，y
       const poi = calcRotatedPoint(
         {
           x: x + data.width * anchor.x,
@@ -216,7 +215,6 @@ export default {
           y: poi.y, // 定位中心点的y
           width: data.width,
           height: data.height,
-          // todo: 需要计算得出
           anchor: { x: anchor.x, y: anchor.y },
         },
         {
@@ -248,7 +246,8 @@ export default {
 
       // mask数据计算
       const mask = data.mask;
-      const maskX = data.isReverse ? mask.x - mask.width : mask.x;
+      const maskX = data.isReverse ? mask.x + mask.width : mask.x;
+
       const maskPoi = calcRotatedPoint(
         {
           x: maskX - mask.width * mask.anchor.x,
@@ -297,21 +296,110 @@ export default {
 
     // 图片的旋转锚点是以mask的为标准，需要手动计算
     getAnchor() {
-      const { x, y, width, height, mask } = this.data;
+      const { x, y, width, height, mask, rotate, isReverse } = this.data;
+      const maskX = isReverse ? mask.x - mask.width : mask.x;
 
       //中心点
+      const center = {
+        x: maskX + mask.width / 2,
+        y: mask.y + mask.height / 2,
+      };
+
+      let poiPosition = {
+        x,
+        y,
+      };
+
+      let maskPosition = {
+        x: mask.x,
+        y: mask.y,
+      };
+
+      if (isReverse) {
+        const data = this.resetPosition();
+        poiPosition = data[0];
+        maskPosition = data[1];
+      }
+
+      const poiX = isReverse ? x - width : x;
+
+      console.log(poiX, poiPosition);
+
+      // 还原图片位置
+      const poi = calcRotatedPoint(
+        {
+          x: poiPosition.x,
+          y: poiPosition.y,
+        },
+        center,
+        -rotate
+      );
+
+      // 还原mask位置
+      const maskPoi = calcRotatedPoint(
+        { x: maskPosition.x, y: maskPosition.y },
+        center,
+        -rotate
+      );
+
+      // 还原之后计算锚点
+      const originCenter = {
+        x: maskPoi.x + mask.width / 2,
+        y: maskPoi.y + mask.height / 2,
+      };
+
+      const diffW = originCenter.x - poi.x;
+      const diffH = originCenter.y - poi.y;
+
+      const anchorX = isReverse ? diffW / width : diffW / width;
+      return {
+        x: anchorX,
+        y: diffH / height,
+      };
+    },
+
+    // 如果发生了翻转，需要回正图形，再减掉翻转加上的宽度，在进行旋转，得到坐标。
+    resetPosition() {
+      const { x, y, mask, rotate, width } = this.data;
+
       const center = {
         x: mask.x + mask.width / 2,
         y: mask.y + mask.height / 2,
       };
 
-      const diffW = center.x - x;
-      const diffH = center.y - y;
+      // 回正mask
+      const correctMask = calcRotatedPoint(
+        { x: mask.x, y: mask.y },
+        center,
+        -rotate
+      );
 
-      return {
-        x: diffW / width,
-        y: diffH / height,
-      };
+      // 减去width 旋转mask
+      const rMask = calcRotatedPoint(
+        {
+          x: correctMask.x - mask.width,
+          y: correctMask.y,
+        },
+        {
+          x: correctMask.x + mask.width / 2,
+          y: correctMask.y + mask.height / 2,
+        },
+        rotate
+      );
+
+      // 回正
+      const correctPoi = calcRotatedPoint({ x, y }, center, -rotate);
+      // 减去width 再旋转
+      const r = calcRotatedPoint(
+        { x: correctPoi.x - width, y: correctPoi.y },
+        {
+          x: correctMask.x + mask.width / 2,
+          y: correctMask.y + mask.height / 2,
+        },
+        rotate
+      );
+
+      return [r, rMask];
     },
   },
 
@@ -373,6 +461,7 @@ export default {
 
       if (data.isReverse && mask.anchor.y === 0) {
         const x = mask.x - mask.width;
+
         newPosition = calcRotatedPoint(
           {
             x: x,

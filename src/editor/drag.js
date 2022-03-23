@@ -283,8 +283,6 @@ export class ScaleHandler {
           return
         }
 
-        console.log('x: %s,y: %s,width: %s, height: %s', newTopLeftPoint.x + newWidth * anchor.x, newTopLeftPoint.y + newHeight * anchor.y, newWidth, newHeight,)
-
         return {
           x: newTopLeftPoint.x + newWidth * anchor.x,
           y: newTopLeftPoint.y + newHeight * anchor.y,

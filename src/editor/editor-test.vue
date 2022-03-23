@@ -149,8 +149,8 @@ export default {
         y,
       });
 
-      data.mask.x = x;
-      data.mask.y = y;
+      data.mask.x += e.movementX;
+      data.mask.y += e.movementY;
     },
 
     handleMouseup() {
