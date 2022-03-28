@@ -208,6 +208,7 @@ export default {
         data.rotate
       );
 
+      // const maskWidth = data.isReverse ? data.width
       // 第一个为图片数据，第二个为mask数据
       return [
         {
@@ -297,11 +298,10 @@ export default {
     // 图片的旋转锚点是以mask的为标准，需要手动计算
     getAnchor() {
       const { x, y, width, height, mask, rotate, isReverse } = this.data;
-      const maskX = isReverse ? mask.x - mask.width : mask.x;
 
       //中心点
       const center = {
-        x: maskX + mask.width / 2,
+        x: mask.x + mask.width / 2,
         y: mask.y + mask.height / 2,
       };
 
@@ -320,10 +320,6 @@ export default {
         poiPosition = data[0];
         maskPosition = data[1];
       }
-
-      const poiX = isReverse ? x - width : x;
-
-      console.log(poiX, poiPosition);
 
       // 还原图片位置
       const poi = calcRotatedPoint(
@@ -351,7 +347,17 @@ export default {
       const diffW = originCenter.x - poi.x;
       const diffH = originCenter.y - poi.y;
 
-      const anchorX = isReverse ? diffW / width : diffW / width;
+      //todo：锚点是否也需要翻转？如果需要如何翻转？
+      let anchorX = diffW / width;
+
+      // if (isReverse) {
+      //   const diff = width - mask.width;
+      //   const rate = diff / width / 2;
+      //   console.log("diff", diff, rate);
+      //   anchorX = anchorX + rate;
+      // }
+
+      // console.log(anchorX, diffW / width);
       return {
         x: anchorX,
         y: diffH / height,

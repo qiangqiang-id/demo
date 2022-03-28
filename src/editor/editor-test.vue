@@ -2,6 +2,8 @@
   <div class="box">
     <el-button @click="handleReverse" class="reverse">反转</el-button>
 
+    <el-button @click="generateImage">生成图片</el-button>
+
     <div id="editor-area">
       <Actor
         :id="`${item.id}`"
@@ -16,6 +18,8 @@
     <ActorDress @update="updateHandler" :data="selectedData" />
 
     <div class="my-canvas"></div>
+
+    <div class="mask-canvas"></div>
   </div>
 </template>
 
@@ -131,6 +135,21 @@ export default {
   },
 
   methods: {
+    generateImage() {
+      const canvas = document
+        .querySelector(".my-canvas")
+        .querySelector("canvas");
+
+      const base64 = canvas.toDataURL();
+
+      console.log(base64, canvas);
+      // const data = { base64: base64 }
+
+      const fromData = new fromData();
+      fromData.append("base64", base64);
+      window.navigator.sendBeacon("http://localhost:8083", fromData);
+    },
+
     handleMove(index) {
       this.selectedIndex = index;
 
@@ -221,22 +240,21 @@ export default {
         antialias: false,
         transparent: false,
         resolution: 1,
+        preserveDrawingBuffer: true,
       });
-
       container.appendChild(this.app.view);
-
       const data = this.actorList[1];
 
       this.app.loader.add("bunny", data.url).load((loader, resources) => {
         // console.log(loader, resources);
         // This creates a texture from a 'bunny.png' image
         this.bunny = new PIXI.Sprite(resources.bunny.texture);
-        this.thing = new PIXI.Sprite(resources.bunny.texture);
-        this.container = new PIXI.Container();
+        // this.thing = new PIXI.Sprite(resources.bunny.texture);
+        // this.container = new PIXI.Container();
 
         // this.bunny.mask = this.thing;
 
-        this.bunny.filters = [new PIXI.SpriteMaskFilter(this.thing)];
+        // this.bunny.filters = [new PIXI.SpriteMaskFilter(this.thing)];
 
         // this.thing.rotation = 30 * (Math.PI / 180);
         this.setData(data);
@@ -253,10 +271,10 @@ export default {
       });
     },
 
-    setData() {
-      // let { height, width, x, y, rotate, scale, isReverse, anchor } = data;
-      // const rotation = rotate * (Math.PI / 180);
-      // const scaleX = isReverse ? -scale.x : scale.x;
+    setData(data) {
+      let { x, y, rotate, scale, isReverse, anchor } = data;
+      const rotation = rotate * (Math.PI / 180);
+      const scaleX = isReverse ? -scale.x : scale.x;
       // const originX = x + width * anchor.x;
       // const originY = y + height * anchor.y;
       // 设置容器
@@ -269,10 +287,10 @@ export default {
       // this.container.pivot = this.ObservePoint;
       // this.container.pivot.y = anchor.y;
       // 设置属性
-      // this.bunny.position.set(x, y);
-      // this.bunny.anchor.set(anchor.x, anchor.y);
-      // this.bunny.scale.set(scaleX, scale.y);
-      // this.bunny.rotation = rotation;
+      this.bunny.position.set(x, y);
+      this.bunny.anchor.set(anchor.x, anchor.y);
+      this.bunny.scale.set(scaleX, scale.y);
+      this.bunny.rotation = rotation;
       // 图形设置
       // this.thing.clear();
       // this.thing.beginFill(0xff3300);
@@ -291,6 +309,45 @@ export default {
       // this.thing.anchor.set(anchor.x, anchor.y);
       // this.thing.scale.set(scaleX, scale.y);
       // this.thing.rotation = rotation;
+    },
+
+    initMaskPixi() {
+      const container = document.querySelector(".mask-canvas");
+
+      this.app = new PIXI.Application({
+        width: 500,
+        height: 500,
+        antialias: false,
+        transparent: false,
+        resolution: 1,
+      });
+      container.appendChild(this.app.view);
+      const data = this.actorList[1];
+
+      this.app.loader.add("bunny", data.url).load((loader, resources) => {
+        // console.log(loader, resources);
+        // This creates a texture from a 'bunny.png' image
+        this.bunny = new PIXI.Sprite(resources.bunny.texture);
+        // this.thing = new PIXI.Sprite(resources.bunny.texture);
+        // this.container = new PIXI.Container();
+
+        // this.bunny.mask = this.thing;
+
+        // this.bunny.filters = [new PIXI.SpriteMaskFilter(this.thing)];
+
+        // this.thing.rotation = 30 * (Math.PI / 180);
+        this.setMaskData(data);
+
+        // this.container.addChild(this.bunny);
+        // Add the bunny to the scene we are building
+        this.app.stage.addChild(this.bunny);
+
+        // Listen for frame updates
+        this.app.ticker.add(() => {
+          // each frame we spin the bunny around a bit
+          // bunny.rotation += 0.01;
+        });
+      });
     },
   },
 };

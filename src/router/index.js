@@ -73,6 +73,11 @@ let router = new VueRouter({
       path: '/pixi',
       name: 'pixi',
       component: () => import('../components/pixi.vue')
+    },
+    {
+      path: '/testScaleX',
+      name: 'testScaleX',
+      component: () => import('../components/testScaleX.vue')
     }
   ]
 })

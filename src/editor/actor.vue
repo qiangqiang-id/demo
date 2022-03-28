@@ -36,6 +36,9 @@ export default {
       const data = this.data;
       if (data.anchor.y !== 0) {
         result = data.x - data.width * data.anchor.x;
+        if (data.isReverse) {
+          // result += data.mask.width;
+        }
       } else {
         result = data.x;
       }
