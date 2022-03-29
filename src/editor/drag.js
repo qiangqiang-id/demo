@@ -98,7 +98,6 @@ export class ScaleHandler {
     this.isLockProportions = true
     this.angle = data.rotate
     this.isUseMaskData = isUseMaskData
-    this.operationData = this.getOperationData()
   }
 
   getOperationData () {
@@ -107,9 +106,9 @@ export class ScaleHandler {
     if (this.isUseMaskData) {
       result = { ...this.data.mask }
     } else {
-      const { x, y, width, height, anchor } = this.data
+      const { x, y, width, height } = this.data
       result = {
-        x, y, width, height, anchor
+        x, y, width, height
       }
     }
     return result
@@ -121,7 +120,7 @@ export class ScaleHandler {
 
 
     const { sPoint, proportion, handlePoint } = this.getKeyVariable()
-    const { x, y, width, height, anchor } = this.getOperationData()
+    const { x, y, width, height } = this.getOperationData()
 
     switch (this.position) {
       case POSITION.leftTop: {
@@ -169,8 +168,8 @@ export class ScaleHandler {
         }
 
         return {
-          x: newTopLeftPoint.x + newWidth * anchor.x,
-          y: newTopLeftPoint.y + newHeight * anchor.y,
+          x: newTopLeftPoint.x,
+          y: newTopLeftPoint.y,
           height: newHeight,
           width: newWidth,
         }
@@ -207,8 +206,8 @@ export class ScaleHandler {
         }
 
         return {
-          x: newBottomLeftPoint.x + newWidth * anchor.x,
-          y: newTopRightPoint.y + newHeight * anchor.y,
+          x: newBottomLeftPoint.x,
+          y: newTopRightPoint.y,
           height: newHeight,
           width: newWidth
         }
@@ -246,8 +245,8 @@ export class ScaleHandler {
         }
 
         return {
-          x: newBottomLeftPoint.x + newWidth * anchor.x,
-          y: newTopRightPoint.y + newHeight * anchor.y,
+          x: newBottomLeftPoint.x,
+          y: newTopRightPoint.y,
           height: newHeight,
           width: newWidth
         }
@@ -284,8 +283,8 @@ export class ScaleHandler {
         }
 
         return {
-          x: newTopLeftPoint.x + newWidth * anchor.x,
-          y: newTopLeftPoint.y + newHeight * anchor.y,
+          x: newTopLeftPoint.x,
+          y: newTopLeftPoint.y,
           height: newHeight,
           width: newWidth
         }
@@ -329,8 +328,8 @@ export class ScaleHandler {
 
         return {
           height: newHeight,
-          y: newCenter.y - newHeight / 2 + newHeight * anchor.y,
-          x: newCenter.x - width / 2 + width * anchor.x,
+          y: newCenter.y - newHeight / 2,
+          x: newCenter.x - width / 2,
         }
 
       }
@@ -360,8 +359,8 @@ export class ScaleHandler {
 
         return {
           width: newWidth,
-          y: newCenter.y - height / 2 + height * anchor.y,
-          x: newCenter.x - newWidth / 2 + newWidth * anchor.x
+          y: newCenter.y - height / 2,
+          x: newCenter.x - newWidth / 2
         }
       }
 
@@ -373,11 +372,11 @@ export class ScaleHandler {
 
 
 
-    const { x, y, width, height, anchor } = this.getOperationData()
+    const { x, y, width, height } = this.getOperationData()
 
     const center = {
-      x: x + width / 2 - width * anchor.x,
-      y: y + height / 2 - height * anchor.y,
+      x: x + width / 2,
+      y: y + height / 2,
     }
 
     const handlePoint = this.getPoint(center)
@@ -398,12 +397,12 @@ export class ScaleHandler {
   // 获取当前拉动点的位置，拉动过程中可能存在旋转，旋转过的中心点是发生了位置变化的，需要做处理。
   getPoint (center) {
     let point;
-    const { x, y, height, width, anchor } = this.getOperationData()
+    const { x, y, height, width } = this.getOperationData()
 
 
     // 手动调整x，y
-    const toX = x - width * anchor.x
-    const toY = y - height * anchor.y
+    const toX = x
+    const toY = y
 
 
     switch (this.position) {

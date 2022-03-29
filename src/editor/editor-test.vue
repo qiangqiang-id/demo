@@ -4,6 +4,8 @@
 
     <el-button @click="generateImage">生成图片</el-button>
 
+    <el-button @click="actorList[0].rotate += 2">旋转</el-button>
+
     <div id="editor-area">
       <Actor
         :id="`${item.id}`"
@@ -18,8 +20,6 @@
     <ActorDress @update="updateHandler" :data="selectedData" />
 
     <div class="my-canvas"></div>
-
-    <div class="mask-canvas"></div>
   </div>
 </template>
 
@@ -30,37 +30,6 @@ import Actor from "./actor.vue";
 import ActorDress from "./ActorDress";
 import { calcRotatedPoint } from "./drag";
 const actorList = [
-  {
-    id: 1,
-    x: 0,
-    y: 0,
-    width: 400,
-    height: 267,
-    originWidth: 400,
-    originHeight: 267,
-    rotate: 0,
-    color: "blue",
-    // 是否翻转
-    isReverse: false,
-    scale: {
-      x: 1,
-      y: 1,
-    },
-    anchor: {
-      x: 0,
-      y: 0,
-    },
-    mask: {
-      x: 0,
-      y: 0,
-      width: 400,
-      height: 267,
-      anchor: {
-        x: 0,
-        y: 0,
-      },
-    },
-  },
   {
     id: 2,
     x: 0,
@@ -104,9 +73,9 @@ export default {
   data() {
     return {
       actorList,
-      selectedIndex: 1,
+      selectedIndex: 0,
       thing: null,
-      bunny: null,
+      s1: null,
       ObservePoint: null,
     };
   },
@@ -122,7 +91,7 @@ export default {
   },
 
   watch: {
-    "actorList.1": {
+    "actorList.0": {
       handler(data) {
         data && this.setData(data);
       },
@@ -179,39 +148,42 @@ export default {
 
     handleReverse() {
       const data = this.actorList[this.selectedIndex];
-      const x = !data.isReverse ? data.x + data.width : data.x - data.width;
-      const poi = calcRotatedPoint(
-        {
-          x: x,
-          y: data.y,
-        },
-        {
-          x: data.x,
-          y: data.y,
-        },
-        data.rotate
-      );
 
-      const mask = data.mask;
-      const maskX = !data.isReverse ? mask.x + mask.width : mask.x - mask.width;
-      const maskPoi = calcRotatedPoint(
-        {
-          x: maskX,
-          y: mask.y,
-        },
-        {
-          x: mask.x,
-          y: mask.y,
-        },
-        data.rotate
-      );
+      data.isReverse = !data.isReverse;
 
-      Object.assign(data, {
-        isReverse: !data.isReverse,
-        ...poi,
-      });
+      // const x = !data.isReverse ? data.x + data.width : data.x - data.width;
+      // const poi = calcRotatedPoint(
+      //   {
+      //     x: x,
+      //     y: data.y,
+      //   },
+      //   {
+      //     x: data.x,
+      //     y: data.y,
+      //   },
+      //   data.rotate
+      // );
 
-      Object.assign(mask, { ...maskPoi });
+      // const mask = data.mask;
+      // const maskX = !data.isReverse ? mask.x + mask.width : mask.x - mask.width;
+      // const maskPoi = calcRotatedPoint(
+      //   {
+      //     x: maskX,
+      //     y: mask.y,
+      //   },
+      //   {
+      //     x: mask.x,
+      //     y: mask.y,
+      //   },
+      //   data.rotate
+      // );
+
+      // Object.assign(data, {
+      //   isReverse: !data.isReverse,
+      //   ...poi,
+      // });
+
+      // Object.assign(mask, { ...maskPoi });
     },
 
     updateHandler(newValue, maskValue) {
@@ -235,119 +207,61 @@ export default {
       const container = document.querySelector(".my-canvas");
 
       this.app = new PIXI.Application({
-        width: 500,
-        height: 500,
+        width: 800,
+        height: 800,
         antialias: false,
-        transparent: false,
+        transparent: true,
         resolution: 1,
         preserveDrawingBuffer: true,
       });
       container.appendChild(this.app.view);
-      const data = this.actorList[1];
+      const data = this.actorList[this.selectedIndex];
 
       this.app.loader.add("bunny", data.url).load((loader, resources) => {
-        // console.log(loader, resources);
-        // This creates a texture from a 'bunny.png' image
-        this.bunny = new PIXI.Sprite(resources.bunny.texture);
-        // this.thing = new PIXI.Sprite(resources.bunny.texture);
-        // this.container = new PIXI.Container();
+        this.c1 = new PIXI.Container();
+        this.s1 = new PIXI.Sprite(resources.bunny.texture);
 
-        // this.bunny.mask = this.thing;
-
-        // this.bunny.filters = [new PIXI.SpriteMaskFilter(this.thing)];
-
-        // this.thing.rotation = 30 * (Math.PI / 180);
         this.setData(data);
-
-        // this.container.addChild(this.bunny);
-        // Add the bunny to the scene we are building
-        this.app.stage.addChild(this.bunny);
-
-        // Listen for frame updates
-        this.app.ticker.add(() => {
-          // each frame we spin the bunny around a bit
-          // bunny.rotation += 0.01;
-        });
+        this.c1.addChild(this.s1);
+        this.app.stage.addChild(this.c1);
       });
     },
 
     setData(data) {
-      let { x, y, rotate, scale, isReverse, anchor } = data;
-      const rotation = rotate * (Math.PI / 180);
+      let { rotate, scale, isReverse, width, height } = data;
       const scaleX = isReverse ? -scale.x : scale.x;
-      // const originX = x + width * anchor.x;
-      // const originY = y + height * anchor.y;
-      // 设置容器
-      // this.container.x = x;
-      // this.container.y = y;
-      // this.container.position.set(x, y);
-      // this.container.width = width;
-      // this.container.height = height;
-      // this.container.rotation = rotation;
-      // this.container.pivot = this.ObservePoint;
-      // this.container.pivot.y = anchor.y;
+
       // 设置属性
-      this.bunny.position.set(x, y);
-      this.bunny.anchor.set(anchor.x, anchor.y);
-      this.bunny.scale.set(scaleX, scale.y);
-      this.bunny.rotation = rotation;
-      // 图形设置
-      // this.thing.clear();
-      // this.thing.beginFill(0xff3300);
-      // this.thing.rotation = rotation;
-      // 设置pivot drawRect的x，y不生效
-      // this.thing.pivot.x = originX;
-      // this.thing.pivot.y = originY;
-      // this.thing.x = x;
-      // this.thing.y = y;
-      // this.thing.drawRect(x, y, width, height);
-      // this.thing.lineStyle(5, 0xff0000);
-      // this.thing.endFill();
-      // this.bunny.alpha = 1;
-      // this.bunny.thing = 0;
-      // this.thing.position.set(x, y);
-      // this.thing.anchor.set(anchor.x, anchor.y);
-      // this.thing.scale.set(scaleX, scale.y);
-      // this.thing.rotation = rotation;
+      this.s1.scale.set(scaleX, scale.y);
+
+      // 容器设置
+      this.c1.pivot.set(width / 2, height / 2);
+      this.c1.angle = rotate;
+      const { x, y } = this.toPositionData();
+      this.c1.position.set(x + width / 2, y + height / 2);
     },
 
-    initMaskPixi() {
-      const container = document.querySelector(".mask-canvas");
+    toPositionData() {
+      const data = this.actorList[this.selectedIndex];
+      if (data.isReverse) {
+        const x = data.x + data.width;
+        return calcRotatedPoint(
+          {
+            x: x,
+            y: data.y,
+          },
+          {
+            x: data.x,
+            y: data.y,
+          },
+          data.rotate
+        );
+      }
 
-      this.app = new PIXI.Application({
-        width: 500,
-        height: 500,
-        antialias: false,
-        transparent: false,
-        resolution: 1,
-      });
-      container.appendChild(this.app.view);
-      const data = this.actorList[1];
-
-      this.app.loader.add("bunny", data.url).load((loader, resources) => {
-        // console.log(loader, resources);
-        // This creates a texture from a 'bunny.png' image
-        this.bunny = new PIXI.Sprite(resources.bunny.texture);
-        // this.thing = new PIXI.Sprite(resources.bunny.texture);
-        // this.container = new PIXI.Container();
-
-        // this.bunny.mask = this.thing;
-
-        // this.bunny.filters = [new PIXI.SpriteMaskFilter(this.thing)];
-
-        // this.thing.rotation = 30 * (Math.PI / 180);
-        this.setMaskData(data);
-
-        // this.container.addChild(this.bunny);
-        // Add the bunny to the scene we are building
-        this.app.stage.addChild(this.bunny);
-
-        // Listen for frame updates
-        this.app.ticker.add(() => {
-          // each frame we spin the bunny around a bit
-          // bunny.rotation += 0.01;
-        });
-      });
+      return {
+        x: data.x,
+        y: data.y,
+      };
     },
   },
 };
@@ -361,12 +275,15 @@ export default {
 
 #editor-area {
   position: absolute;
-  top: 30%;
-  /* left: 50%; */
-  /* transform: translate(-50%, -50%); */
-  width: 500px;
-  height: 500px;
-  background-color: salmon;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  z-index: 1;
+  box-shadow: inset 0 -3em 3em rgba(0, 0, 0, 0.1), 0 0 0 2px rgb(255, 255, 255),
+    0.3em 0.3em 1em rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
 }
 
 .container {
@@ -375,11 +292,11 @@ export default {
 }
 
 .my-canvas {
-  width: 500px;
-  height: 500px;
+  width: 800px;
+  height: 800px;
   position: absolute;
-  top: 30%;
-  right: 0;
-  background-color: blue;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 </style>

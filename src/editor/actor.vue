@@ -1,11 +1,10 @@
 <template>
-  <div :style="actorStyle">
-    <img v-if="data.url" :src="data.url" />
-  </div>
+  <div :style="actorStyle"></div>
 </template>
 
 
 <script>
+// import { calcRotatedPoint } from "./drag";
 export default {
   props: {
     data: {
@@ -16,41 +15,46 @@ export default {
 
   computed: {
     actorStyle() {
-      return {
-        width: this.data.width + "px",
-        height: this.data.height + "px",
-        position: "absolute",
-        top: this.computedY + "px",
-        left: this.computedX + "px",
-        transform: `rotate(${this.data.rotate}deg) scaleX(${
-          this.data.isReverse ? -1 : 1
-        })`,
-        transformOrigin: `${this.data.anchor.x * 100}% ${
-          this.data.anchor.y * 100
-        }%`,
+      const data = this.data;
+      const mask = data.mask;
+      let newPosition = {
+        x: mask.x,
+        y: mask.y,
       };
-    },
 
-    computedX() {
-      let result;
-      const data = this.data;
-      if (data.anchor.y !== 0) {
-        result = data.x - data.width * data.anchor.x;
-        if (data.isReverse) {
-          // result += data.mask.width;
-        }
-      } else {
-        result = data.x;
-      }
-      return result;
-    },
+      // if (mask.anchor.y !== 0) {
+      //   newPosition = {
+      //     x: mask.x - mask.width * mask.anchor.x,
+      //     y: mask.y - mask.height * mask.anchor.y,
+      //   };
+      // }
 
-    computedY() {
-      const data = this.data;
-      if (data.anchor.y !== 0) {
-        return data.y - data.height * data.anchor.y;
-      }
-      return data.y;
+      // if (data.isReverse && mask.anchor.y === 0) {
+      //   const x = mask.x - mask.width;
+
+      //   newPosition = calcRotatedPoint(
+      //     {
+      //       x: x,
+      //       y: mask.y,
+      //     },
+      //     {
+      //       x: mask.x,
+      //       y: mask.y,
+      //     },
+      //     data.rotate
+      //   );
+      // }
+
+      return {
+        width: data.width + "px",
+        height: data.height + "px",
+        position: "absolute",
+        top: newPosition.y + "px",
+        left: newPosition.x + "px",
+        transform: `rotate(${data.rotate}deg) scaleX(${
+          data.isReverse ? -1 : 1
+        })`,
+      };
     },
   },
 };

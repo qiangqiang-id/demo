@@ -1,8 +1,8 @@
 <template>
   <div class="dress-container">
-    <!-- <div class="actor-dress" :style="actorDressStyle"> -->
-    <!-- <div
-        class="point"
+    <div class="actor-dress-mask" :style="actorDressStyleMask">
+      <div
+        class="point mask-point"
         v-for="item in pointList"
         :key="item.type"
         @mousedown.stop="dragScale(item.type, $event)"
@@ -13,36 +13,6 @@
           transform: `translate(-50%,-50%)`,
           cursor: cursorStyle[item.cursorType],
         }"
-      /> -->
-
-    <!-- 旋转区域 -->
-    <!-- <div
-        class="rotateArea"
-        :style="{
-          position: 'absolute',
-          left: data.width / 2 + 'px',
-          top: data.height + 10 + 'px',
-          transform: `translateX(-50%)`,
-        }"
-        @mousedown.stop="dragRotate"
-      >
-        <img src="../assets/icon_rotate.png" alt="rotateIcon" />
-      </div> -->
-    <!-- </div> -->
-
-    <div class="actor-dress-mask" :style="actorDressStyleMask">
-      <div
-        class="point mask-point"
-        v-for="item in pointList"
-        :key="item.type"
-        @mousedown.stop="dragScale(item.type, $event)"
-        :style="{
-          position: 'absolute',
-          top: data.mask.height * item.position.y + 'px',
-          left: data.mask.width * item.position.x + 'px',
-          transform: `translate(-50%,-50%)`,
-          cursor: cursorStyle[item.cursorType],
-        }"
       />
 
       <!-- 旋转区域 -->
@@ -50,8 +20,8 @@
         class="rotateArea"
         :style="{
           position: 'absolute',
-          left: data.mask.width / 2 + 'px',
-          top: data.mask.height + 10 + 'px',
+          left: data.width / 2 + 'px',
+          top: data.height + 10 + 'px',
           transform: `translateX(-50%)`,
         }"
         @mousedown.stop="dragRotate"
@@ -113,31 +83,33 @@ export default {
 
       dragAction(event, {
         init: () => {
-          const [data, maskData] = this.repositionAnchor();
-          this.$emit("update", data, maskData);
+          // const [data, maskData] = this.repositionAnchor();
+          // this.$emit("update", data, maskData);
         },
 
         move: (e) => {
-          let newPosition = {},
-            maskPosition = {};
+          // let newPosition = {},
+          let maskPosition = {};
 
           maskPosition = scaleHandler.getAroundScaleData({
             x: e.x - this.editorAreaInfo.x,
             y: e.y - this.editorAreaInfo.y,
           });
 
+          console.log("maskPosition", maskPosition);
+
           if (!cneterPoint.includes(type)) {
-            newPosition = this.resizeForAroundScale(maskPosition);
+            // newPosition = this.resizeForAroundScale(maskPosition);
           } else {
             // newPosition = this.resizeForCenterScale(maskPosition);
           }
 
-          this.$emit("update", newPosition, maskPosition);
+          this.$emit("update", maskPosition, maskPosition);
         },
 
         end: () => {
-          const [data, maskData] = this.repositionRegular();
-          this.$emit("update", data, maskData);
+          // const [data, maskData] = this.repositionRegular();
+          // this.$emit("update", data, maskData);
         },
       });
     },
@@ -155,8 +127,8 @@ export default {
 
       dragAction(event, {
         init: () => {
-          const [data, maskData] = this.repositionAnchor();
-          this.$emit("update", data, maskData);
+          // const [data, maskData] = this.repositionAnchor();
+          // this.$emit("update", data, maskData);
         },
         move: (e) => {
           const rotate = rotateHandler.rotateHandler({
@@ -168,115 +140,10 @@ export default {
         },
 
         end: () => {
-          const [data, maskData] = this.repositionRegular();
-          this.$emit("update", data, maskData);
+          // const [data, maskData] = this.repositionRegular();
+          // this.$emit("update", data, maskData);
         },
       });
-    },
-
-    // 计算得出新坐标基于anchor(x:0.5, y:0.5)
-    repositionAnchor() {
-      const data = this.data;
-      const x = data.isReverse ? data.x - data.width : data.x;
-
-      const anchor = this.getAnchor();
-      // 计算出新锚点的x，y
-      const poi = calcRotatedPoint(
-        {
-          x: x + data.width * anchor.x,
-          y: data.y + data.height * anchor.y,
-        },
-        {
-          x: data.x,
-          y: data.y,
-        },
-        data.rotate
-      );
-
-      const mask = data.mask;
-      const maskX = data.isReverse ? mask.x - mask.width : mask.x;
-
-      const maskPoi = calcRotatedPoint(
-        {
-          x: maskX + mask.width * (0.5 - mask.anchor.x),
-          y: mask.y + mask.height * (0.5 - mask.anchor.y),
-        },
-        {
-          x: mask.x,
-          y: mask.y,
-        },
-        data.rotate
-      );
-
-      // const maskWidth = data.isReverse ? data.width
-      // 第一个为图片数据，第二个为mask数据
-      return [
-        {
-          x: poi.x, // 定位中心点的x
-          y: poi.y, // 定位中心点的y
-          width: data.width,
-          height: data.height,
-          anchor: { x: anchor.x, y: anchor.y },
-        },
-        {
-          x: maskPoi.x,
-          y: maskPoi.y,
-          width: mask.width,
-          height: mask.height,
-          anchor: { x: 0.5, y: 0.5 },
-        },
-      ];
-    },
-
-    // 计算出新坐标基于anchor(x: 0, y: 0 }
-    repositionRegular() {
-      const data = this.data;
-      // data.scale.x < 0 即为翻转，手动更改x轴
-      const x = data.isReverse ? data.x + data.width : data.x;
-      const poi = calcRotatedPoint(
-        {
-          x: x - data.width * data.anchor.x,
-          y: data.y - data.height * data.anchor.y,
-        },
-        {
-          x: data.x,
-          y: data.y,
-        },
-        data.rotate
-      );
-
-      // mask数据计算
-      const mask = data.mask;
-      const maskX = data.isReverse ? mask.x + mask.width : mask.x;
-
-      const maskPoi = calcRotatedPoint(
-        {
-          x: maskX - mask.width * mask.anchor.x,
-          y: mask.y - mask.height * mask.anchor.y,
-        },
-        {
-          x: mask.x,
-          y: mask.y,
-        },
-        data.rotate
-      );
-
-      return [
-        {
-          x: poi.x, // 定位中心点的x
-          y: poi.y, // 定位中心点的y
-          width: data.width,
-          height: data.height,
-          anchor: { x: 0, y: 0 },
-        },
-        {
-          x: maskPoi.x,
-          y: maskPoi.y,
-          width: mask.width,
-          height: mask.height,
-          anchor: { x: 0, y: 0 },
-        },
-      ];
     },
 
     resizeForAroundScale(maskPosition) {
@@ -410,46 +277,6 @@ export default {
   },
 
   computed: {
-    actorDressStyle() {
-      const data = this.data;
-      let newPosition = {
-        x: data.x,
-        y: data.y,
-      };
-
-      if (data.anchor.y !== 0) {
-        newPosition = {
-          x: data.x - data.width * data.anchor.x,
-          y: data.y - data.height * data.anchor.y,
-        };
-      }
-
-      if (data.isReverse && data.anchor.y === 0) {
-        const x = data.x - data.width;
-        newPosition = calcRotatedPoint(
-          {
-            x: x,
-            y: data.y,
-          },
-          {
-            x: data.x,
-            y: data.y,
-          },
-          data.rotate
-        );
-      }
-
-      return {
-        position: "absolute",
-        top: `${newPosition.y}px`,
-        left: `${newPosition.x}px`,
-        width: data.width + "px",
-        height: data.height + "px",
-        transform: `rotate(${data.rotate}deg)`,
-        transformOrigin: `${data.anchor.x * 100}% ${data.anchor.y * 100}%`,
-      };
-    },
-
     actorDressStyleMask() {
       const data = this.data;
       const mask = data.mask;
@@ -458,28 +285,28 @@ export default {
         y: mask.y,
       };
 
-      if (mask.anchor.y !== 0) {
-        newPosition = {
-          x: mask.x - mask.width * mask.anchor.x,
-          y: mask.y - mask.height * mask.anchor.y,
-        };
-      }
+      // if (mask.anchor.y !== 0) {
+      //   newPosition = {
+      //     x: mask.x - mask.width * mask.anchor.x,
+      //     y: mask.y - mask.height * mask.anchor.y,
+      //   };
+      // }
 
-      if (data.isReverse && mask.anchor.y === 0) {
-        const x = mask.x - mask.width;
+      // if (data.isReverse && mask.anchor.y === 0) {
+      //   const x = mask.x - mask.width;
 
-        newPosition = calcRotatedPoint(
-          {
-            x: x,
-            y: mask.y,
-          },
-          {
-            x: mask.x,
-            y: mask.y,
-          },
-          data.rotate
-        );
-      }
+      //   newPosition = calcRotatedPoint(
+      //     {
+      //       x: x,
+      //       y: mask.y,
+      //     },
+      //     {
+      //       x: mask.x,
+      //       y: mask.y,
+      //     },
+      //     data.rotate
+      //   );
+      // }
 
       return {
         position: "absolute",
@@ -488,7 +315,7 @@ export default {
         width: mask.width + "px",
         height: mask.height + "px",
         transform: `rotate(${data.rotate}deg)`,
-        transformOrigin: `${mask.anchor.x * 100}% ${mask.anchor.y * 100}%`,
+        // transformOrigin: `${mask.anchor.x * 100}% ${mask.anchor.y * 100}%`,
       };
     },
 
@@ -526,6 +353,7 @@ export default {
   user-select: none;
   cursor: pointer;
   pointer-events: auto;
+  border: 2px solid #eee;
 }
 .rotateArea {
   cursor: url(https://cdn.dancf.com/design/svg/ic_mouse_rotation_0.f800a9a2.svg)
@@ -540,10 +368,13 @@ img {
 
 .dress-container {
   position: absolute;
-  top: 30%;
-  width: 500px;
-  height: 500px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
   pointer-events: none;
+  z-index: 2;
 }
 
 .mask-point {
