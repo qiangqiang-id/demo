@@ -1,57 +1,51 @@
 <template>
   <div class="container">
-    <div class="box">
-      <span v-for="i in 10" :key="i">{{ i * 10 }}%</span>
-    </div>
-
-    <div class="line"></div>
+    <div class="father"></div>
   </div>
 </template>
-
 
 <script>
 export default {
   data() {
-    return {};
+    return {
+      data: {
+        x: 0,
+        y: 0,
+        width: 600,
+        height: 400,
+        mask: {
+          x: 0,
+          y: 0,
+          width: 600,
+          height: 400,
+        },
+        rotate: 45,
+        anchtor: {
+          x: 0,
+          y: 0,
+        },
+      },
+    };
   },
 };
 </script>
 
-
 <style>
 .container {
-  height: 100vh;
+  height: 80vh;
+  width: 80vh;
+  border: 1px solid black;
+  margin: 0 auto;
+  position: relative;
 }
 
-.line {
+.father {
   position: absolute;
-  top: 0;
-  left: 400px;
-  width: 0;
+  top: 200px;
+  left: 100px;
+  width: 600px;
   height: 400px;
-  border: 1px solid skyblue;
-}
-.box {
-  position: absolute;
-  top: 0;
-  left: 800px;
-  width: 400px;
-  height: 200px;
-  transform: scaleX(-1);
-  transform-origin: 0% 0;
-  display: flex;
-  justify-content: space-between;
-}
-span {
-  width: 40px;
-  height: 200px;
-  display: inline-block;
-}
-span:nth-child(odd) {
-  background-color: red;
-}
-
-span:nth-child(even) {
-  background-color: green;
+  background: skyblue;
+  transform: rotate(45deg);
 }
 </style>

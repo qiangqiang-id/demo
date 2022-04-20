@@ -65,7 +65,7 @@ let router = new VueRouter({
       component: () => import('../components/scroll.vue'),
     },
     {
-      path: '/editorTest',
+      path: '/',
       name: 'editorTest',
       component: () => import('../editor/editor-test.vue')
     },

@@ -92,35 +92,22 @@ const pointInRect = (p0, p1, p2) => {
 
 export class ScaleHandler {
 
-  constructor(data, position, isUseMaskData = false) {
-    this.data = data
+  constructor(data, position, maskData) {
+    this.data = maskData
     this.position = position
     this.isLockProportions = true
     this.angle = data.rotate
-    this.isUseMaskData = isUseMaskData
   }
 
-  getOperationData () {
 
-    let result = {}
-    if (this.isUseMaskData) {
-      result = { ...this.data.mask }
-    } else {
-      const { x, y, width, height } = this.data
-      result = {
-        x, y, width, height
-      }
-    }
-    return result
-
-  }
 
   // 获取拉四个角度的位置数据
   getAroundScaleData (mousePosition) {
 
 
     const { sPoint, proportion, handlePoint } = this.getKeyVariable()
-    const { x, y, width, height } = this.getOperationData()
+    const { x, y, width, height } = this.data
+
 
     switch (this.position) {
       case POSITION.leftTop: {
@@ -320,6 +307,7 @@ export class ScaleHandler {
 
         if (!pointInRect(newCenter, handlePoint, sPoint) || newHeight < 10) {
           return {
+            width,
             height,
             x,
             y
@@ -327,6 +315,7 @@ export class ScaleHandler {
         }
 
         return {
+          width,
           height: newHeight,
           y: newCenter.y - newHeight / 2,
           x: newCenter.x - width / 2,
@@ -354,10 +343,11 @@ export class ScaleHandler {
         }
 
         if (!pointInRect(newCenter, handlePoint, sPoint) || newWidth < 10) {
-          return { width, x, y }
+          return { width, height, x, y }
         }
 
         return {
+          height,
           width: newWidth,
           y: newCenter.y - height / 2,
           x: newCenter.x - newWidth / 2
@@ -372,8 +362,7 @@ export class ScaleHandler {
 
 
 
-    const { x, y, width, height } = this.getOperationData()
-
+    const { x, y, width, height } = this.data
     const center = {
       x: x + width / 2,
       y: y + height / 2,
@@ -397,8 +386,7 @@ export class ScaleHandler {
   // 获取当前拉动点的位置，拉动过程中可能存在旋转，旋转过的中心点是发生了位置变化的，需要做处理。
   getPoint (center) {
     let point;
-    const { x, y, height, width } = this.getOperationData()
-
+    const { x, y, height, width } = this.data
 
     // 手动调整x，y
     const toX = x

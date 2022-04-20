@@ -1,32 +1,34 @@
 <template>
   <div class="dress-container">
-    <div class="actor-dress-mask" :style="actorDressStyleMask">
-      <div
-        class="point mask-point"
-        v-for="item in pointList"
-        :key="item.type"
-        @mousedown.stop="dragScale(item.type, $event)"
-        :style="{
-          position: 'absolute',
-          top: data.height * item.position.y + 'px',
-          left: data.width * item.position.x + 'px',
-          transform: `translate(-50%,-50%)`,
-          cursor: cursorStyle[item.cursorType],
-        }"
-      />
+    <div class="actor-dress" :style="actorDressStyle">
+      <div class="actor-dress-mask" :style="actorDressStyleMask">
+        <div
+          class="point mask-point"
+          v-for="item in pointList"
+          :key="item.type"
+          @mousedown.stop="dragScale(item.type, $event)"
+          :style="{
+            position: 'absolute',
+            top: data.mask.height * item.position.y + 'px',
+            left: data.mask.width * item.position.x + 'px',
+            transform: `translate(-50%,-50%)`,
+            cursor: cursorStyle[item.cursorType],
+          }"
+        />
 
-      <!-- 旋转区域 -->
-      <div
-        class="rotateArea"
-        :style="{
-          position: 'absolute',
-          left: data.width / 2 + 'px',
-          top: data.height + 10 + 'px',
-          transform: `translateX(-50%)`,
-        }"
-        @mousedown.stop="dragRotate"
-      >
-        <img src="../assets/icon_rotate.png" alt="rotateIcon" />
+        <!-- 旋转区域 -->
+        <div
+          class="rotateArea"
+          :style="{
+            position: 'absolute',
+            left: data.mask.width / 2 + 'px',
+            top: data.mask.height + 10 + 'px',
+            transform: `translateX(-50%)`,
+          }"
+          @mousedown.stop="dragRotate"
+        >
+          <img src="../assets/icon_rotate.png" alt="rotateIcon" />
+        </div>
       </div>
     </div>
   </div>
@@ -35,11 +37,12 @@
 
 <script>
 import {
-  ScaleHandler,
+  // ScaleHandler,
   dragAction,
   RotateHandler,
   calcRotatedPoint,
 } from "./drag";
+import { MaskScale } from "./maskScale";
 
 import { pointList, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 
@@ -61,6 +64,19 @@ export default {
       type: undefined,
       POSITION,
       editorAreaInfo: null,
+      startImageData: {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+      },
+
+      startData: {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+      },
     };
   },
 
@@ -68,18 +84,37 @@ export default {
     this.editorAreaInfo = document
       .getElementById("editor-area")
       .getBoundingClientRect();
+
+    document.addEventListener("click", (e) => {
+      const x = e.clientX - this.editorAreaInfo.x;
+      const y = e.clientY - this.editorAreaInfo.y;
+      console.log(x, y);
+    });
   },
 
   methods: {
     dragScale(type, event) {
-      const scaleHandler = new ScaleHandler(this.data, type, true);
+      // const scaleHandler = new ScaleHandler(this.data, type);
+      // this.data.editorAreaInfo = this.editorAreaInfo;
+      const maskScale = new MaskScale(this.data, type);
 
-      const cneterPoint = [
-        POSITION.topCenter,
-        POSITION.leftCenter,
-        POSITION.rightCenter,
-        POSITION.bottomCenter,
-      ];
+      // const startData = {
+      //   x: this.data.x,
+      //   y: this.data.y,
+      //   width: this.data.width,
+      //   height: this.data.height,
+      // };
+
+      // const { mask } = this.data;
+
+      // const maskStartData = {
+      //   x: mask.x,
+      //   y: mask.y,
+      //   width: mask.width,
+      //   height: mask.height,
+      // };
+
+      // let currentW = maskStartData.width;
 
       dragAction(event, {
         init: () => {
@@ -88,23 +123,12 @@ export default {
         },
 
         move: (e) => {
-          // let newPosition = {},
-          let maskPosition = {};
-
-          maskPosition = scaleHandler.getAroundScaleData({
+          const { maskData, rectData } = maskScale.handleScale({
             x: e.x - this.editorAreaInfo.x,
             y: e.y - this.editorAreaInfo.y,
           });
 
-          console.log("maskPosition", maskPosition);
-
-          if (!cneterPoint.includes(type)) {
-            // newPosition = this.resizeForAroundScale(maskPosition);
-          } else {
-            // newPosition = this.resizeForCenterScale(maskPosition);
-          }
-
-          this.$emit("update", maskPosition, maskPosition);
+          this.$emit("update", rectData, maskData);
         },
 
         end: () => {
@@ -130,6 +154,7 @@ export default {
           // const [data, maskData] = this.repositionAnchor();
           // this.$emit("update", data, maskData);
         },
+
         move: (e) => {
           const rotate = rotateHandler.rotateHandler({
             x: e.clientX - this.editorAreaInfo.x,
@@ -146,21 +171,65 @@ export default {
       });
     },
 
-    resizeForAroundScale(maskPosition) {
-      const { mask, width, height } = this.data;
+    resizeForAroundScale(newPosition, type) {
+      let pic = { ...newPosition };
 
-      const rateW = maskPosition.width / mask.width;
-      const rateH = maskPosition.height / mask.height;
+      let image = {};
 
-      return {
-        x: maskPosition.x,
-        y: maskPosition.y,
-        width: width * rateW,
-        height: height * rateH,
-      };
+      const {
+        x: startX,
+        y: startY,
+        height: startH,
+        width: startW,
+      } = this.startImageData;
+
+      const startData = this.startData;
+
+      switch (type) {
+        case POSITION.rightBottom: {
+          const rateW = newPosition.width / startData.width;
+          const rateH = newPosition.height / startData.height;
+          image = {
+            x: startX,
+            y: startY,
+            width: startW * rateW,
+            height: startH * rateH,
+          };
+          break;
+        }
+
+        case POSITION.leftBottom: {
+          break;
+        }
+      }
+
+      return [pic, image];
     },
 
-    resizeForCenterScale() {},
+    resizeForCenterScale(newPosition, type) {
+      // let image = {};
+
+      console.log("newPosition", newPosition);
+
+      switch (type) {
+        case POSITION.leftCenter: {
+          // 判断是否需要修改图片的大小
+          break;
+        }
+        case POSITION.rightCenter: {
+          break;
+        }
+
+        case POSITION.topCenter: {
+          break;
+        }
+        case POSITION.bottomCenter: {
+          break;
+        }
+      }
+
+      // return [pic, image];
+    },
 
     // 图片的旋转锚点是以mask的为标准，需要手动计算
     getAnchor() {
@@ -277,14 +346,9 @@ export default {
   },
 
   computed: {
-    actorDressStyleMask() {
+    actorDressStyle() {
       const data = this.data;
       const mask = data.mask;
-      let newPosition = {
-        x: mask.x,
-        y: mask.y,
-      };
-
       // if (mask.anchor.y !== 0) {
       //   newPosition = {
       //     x: mask.x - mask.width * mask.anchor.x,
@@ -308,14 +372,31 @@ export default {
       //   );
       // }
 
+      // const anchorX = data.mask.x + data.mask.width / 2;
+      // const anchorY = data.mask.y + data.mask.height / 2;
+
+      const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
+      const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;
+
       return {
         position: "absolute",
-        top: `${newPosition.y}px`,
-        left: `${newPosition.x}px`,
-        width: mask.width + "px",
-        height: mask.height + "px",
+        top: `${data.y}px`,
+        left: `${data.x}px`,
+        width: data.width + "px",
+        height: data.height + "px",
         transform: `rotate(${data.rotate}deg)`,
-        // transformOrigin: `${mask.anchor.x * 100}% ${mask.anchor.y * 100}%`,
+        transformOrigin: `${rateX * 100}% ${rateY * 100}%`,
+      };
+    },
+
+    actorDressStyleMask() {
+      const data = this.data.mask;
+      return {
+        position: "absolute",
+        top: `${data.y}px`,
+        left: `${data.x}px`,
+        width: data.width + "px",
+        height: data.height + "px",
       };
     },
 

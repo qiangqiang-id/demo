@@ -2,8 +2,6 @@
   <div class="box">
     <el-button @click="handleReverse" class="reverse">反转</el-button>
 
-    <el-button @click="generateImage">生成图片</el-button>
-
     <el-button @click="actorList[0].rotate += 2">旋转</el-button>
 
     <div id="editor-area">
@@ -19,7 +17,7 @@
 
     <ActorDress @update="updateHandler" :data="selectedData" />
 
-    <div class="my-canvas"></div>
+    <canvas id="my-canvas"></canvas>
   </div>
 </template>
 
@@ -41,10 +39,6 @@ const actorList = [
     rotate: 0,
     url: "https://st0.dancf.com/gaoding-material/0/images/223463/20191107-203726-aUYH9.jpg",
     isReverse: false,
-    scale: {
-      x: 1,
-      y: 1,
-    },
     anchor: {
       x: 0,
       y: 0,
@@ -54,16 +48,12 @@ const actorList = [
       y: 0,
       width: 400,
       height: 267,
-      anchor: {
-        x: 0,
-        y: 0,
-      },
     },
   },
 ];
 
 export default {
-  naem: "textInput",
+  naem: "EditorTest",
 
   components: {
     ActorDress,
@@ -74,9 +64,9 @@ export default {
     return {
       actorList,
       selectedIndex: 0,
-      thing: null,
       s1: null,
-      ObservePoint: null,
+      m1: null,
+      m: null,
     };
   },
 
@@ -104,21 +94,6 @@ export default {
   },
 
   methods: {
-    generateImage() {
-      const canvas = document
-        .querySelector(".my-canvas")
-        .querySelector("canvas");
-
-      const base64 = canvas.toDataURL();
-
-      console.log(base64, canvas);
-      // const data = { base64: base64 }
-
-      const fromData = new fromData();
-      fromData.append("base64", base64);
-      window.navigator.sendBeacon("http://localhost:8083", fromData);
-    },
-
     handleMove(index) {
       this.selectedIndex = index;
 
@@ -129,16 +104,8 @@ export default {
     handleMousemove(e) {
       const data = this.actorList[this.selectedIndex];
 
-      const x = data.x + e.movementX;
-      const y = data.y + e.movementY;
-
-      Object.assign(data, {
-        x,
-        y,
-      });
-
-      data.mask.x += e.movementX;
-      data.mask.y += e.movementY;
+      data.x += e.movementX;
+      data.y += e.movementY;
     },
 
     handleMouseup() {
@@ -191,11 +158,6 @@ export default {
 
       Object.assign(data, newValue);
       maskValue && Object.assign(data.mask, maskValue);
-
-      data.scale = {
-        x: data.width / data.originWidth,
-        y: data.height / data.originHeight,
-      };
     },
 
     changeWidth() {
@@ -204,43 +166,72 @@ export default {
     },
 
     runPixi() {
-      const container = document.querySelector(".my-canvas");
+      const container = document.querySelector("#my-canvas");
 
       this.app = new PIXI.Application({
         width: 800,
         height: 800,
         antialias: false,
-        transparent: true,
+        backgroundAlpha: 0,
         resolution: 1,
         preserveDrawingBuffer: true,
+        view: container,
       });
-      container.appendChild(this.app.view);
       const data = this.actorList[this.selectedIndex];
 
       this.app.loader.add("bunny", data.url).load((loader, resources) => {
         this.c1 = new PIXI.Container();
         this.s1 = new PIXI.Sprite(resources.bunny.texture);
 
-        this.setData(data);
+        this.m = new PIXI.Graphics();
+        this.m.beginFill(0xff0000);
+        this.m.drawRect(0, 0, data.width, data.height);
+        this.m.endFill();
+        this.m.alpha = 0;
+
+        this.m1 = new PIXI.Graphics();
+        this.m1.beginFill(0xff002123);
+        this.m1.drawRect(
+          data.mask.x,
+          data.mask.y,
+          data.mask.width,
+          data.mask.height
+        );
+        this.m1.endFill();
+
         this.c1.addChild(this.s1);
-        this.app.stage.addChild(this.c1);
+        this.c1.addChild(this.m1);
+        this.c1.addChild(this.m);
+        this.s1.mask = this.m1;
+
+        this.setData(data);
+        // this.app.stage.addChild(this.c1);
       });
     },
 
     setData(data) {
-      let { rotate, scale, isReverse, width, height } = data;
-      const scaleX = isReverse ? -scale.x : scale.x;
-
-      // 设置属性
-      this.s1.scale.set(scaleX, scale.y);
-
+      let { rotate, mask, width, height, x, y } = data;
       // 容器设置
-      this.c1.pivot.set(width / 2, height / 2);
+      const pivotX = mask.x + mask.width / 2;
+      const pivotY = mask.y + mask.height / 2;
+      const c1X = x + pivotX;
+      const c1Y = y + pivotY;
       this.c1.angle = rotate;
-      const { x, y } = this.toPositionData();
-      this.c1.position.set(x + width / 2, y + height / 2);
-    },
+      this.c1.pivot.set(pivotX, pivotY);
+      this.c1.position.set(c1X, c1Y);
 
+      this.m.width = width;
+      this.m.height = height;
+
+      this.s1.width = width;
+      this.s1.height = height;
+
+      // const { x, y } = this.toPositionData();
+      // 设置mask
+      this.m1.width = mask.width;
+      this.m1.height = mask.height;
+      this.m1.position.set(mask.x, mask.y);
+    },
     toPositionData() {
       const data = this.actorList[this.selectedIndex];
       if (data.isReverse) {
@@ -258,6 +249,7 @@ export default {
         );
       }
 
+      // 加上蒙层之后，容器的大小就和蒙层一致
       return {
         x: data.x,
         y: data.y,
@@ -291,7 +283,7 @@ export default {
   cursor: move;
 }
 
-.my-canvas {
+#my-canvas {
   width: 800px;
   height: 800px;
   position: absolute;

@@ -17,10 +17,6 @@ export default {
     actorStyle() {
       const data = this.data;
       const mask = data.mask;
-      let newPosition = {
-        x: mask.x,
-        y: mask.y,
-      };
 
       // if (mask.anchor.y !== 0) {
       //   newPosition = {
@@ -45,15 +41,17 @@ export default {
       //   );
       // }
 
+      const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
+      const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;
+
       return {
         width: data.width + "px",
         height: data.height + "px",
         position: "absolute",
-        top: newPosition.y + "px",
-        left: newPosition.x + "px",
-        transform: `rotate(${data.rotate}deg) scaleX(${
-          data.isReverse ? -1 : 1
-        })`,
+        top: data.y + "px",
+        left: data.x + "px",
+        transform: `rotate(${data.rotate}deg)`,
+        transformOrigin: `${rateX * 100}% ${rateY * 100}%`,
       };
     },
   },
