@@ -1,6 +1,6 @@
 <template>
   <div :style="actorStyle">
-    <img :src="data.url" />
+    <!-- <img :src="data.url" /> -->
   </div>
 </template>
 
@@ -19,29 +19,6 @@ export default {
     actorStyle() {
       const data = this.data;
       const mask = data.mask;
-
-      // if (mask.anchor.y !== 0) {
-      //   newPosition = {
-      //     x: mask.x - mask.width * mask.anchor.x,
-      //     y: mask.y - mask.height * mask.anchor.y,
-      //   };
-      // }
-
-      // if (data.isReverse && mask.anchor.y === 0) {
-      //   const x = mask.x - mask.width;
-
-      //   newPosition = calcRotatedPoint(
-      //     {
-      //       x: x,
-      //       y: mask.y,
-      //     },
-      //     {
-      //       x: mask.x,
-      //       y: mask.y,
-      //     },
-      //     data.rotate
-      //   );
-      // }
 
       const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
       const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;

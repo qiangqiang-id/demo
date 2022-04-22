@@ -205,7 +205,7 @@ export default {
         this.s1.mask = this.m1;
 
         this.setData(data);
-        // this.app.stage.addChild(this.c1);
+        this.app.stage.addChild(this.c1);
       });
     },
 
