@@ -97,6 +97,7 @@ export class ScaleHandler {
     this.position = position
     this.isLockProportions = true
     this.angle = data.rotate
+    this.currentData = data
   }
 
 
@@ -148,7 +149,6 @@ export class ScaleHandler {
           newWidth = newBottomRightPoint.x - newTopLeftPoint.x;
           newHeight = newBottomRightPoint.y - newTopLeftPoint.y;
         }
-
         if (newWidth < 20 || newHeight < 20) {
           return { width, height, x, y };
 
@@ -228,7 +228,7 @@ export class ScaleHandler {
         }
 
         if (newWidth < 20 || (newHeight < 20)) {
-          return
+          return { width, height, x, y }
         }
 
         return {
@@ -266,7 +266,7 @@ export class ScaleHandler {
         }
 
         if (newWidth < 20 || (newHeight < 20)) {
-          return
+          return { width, height, x, y }
         }
 
         return {

@@ -123,10 +123,13 @@ export default {
         },
 
         move: (e) => {
-          const { maskData, rectData } = maskScale.handleScale({
-            x: e.x - this.editorAreaInfo.x,
-            y: e.y - this.editorAreaInfo.y,
-          });
+          const { maskData, rectData } = maskScale.handleScale(
+            {
+              x: e.x - this.editorAreaInfo.x,
+              y: e.y - this.editorAreaInfo.y,
+            },
+            type
+          );
 
           this.$emit("update", rectData, maskData);
         },

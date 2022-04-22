@@ -1,5 +1,7 @@
 <template>
-  <div :style="actorStyle"></div>
+  <div :style="actorStyle">
+    <img :src="data.url" />
+  </div>
 </template>
 
 

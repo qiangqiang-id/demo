@@ -1,12 +1,9 @@
 
 
 
+
 import { ScaleHandler, calcRotatedPoint } from './drag'
-// import { isCollision } from './helper'
-
-
-let dom = null
-let center = null
+import { POSITION } from './constants';
 
 export class MaskScale {
   constructor(containerStartData, type) {
@@ -30,9 +27,8 @@ export class MaskScale {
     }
   }
 
+  // 根据开始位置，旋转后的左上角的位置
   init (data) {
-
-
     const { x, y, mask } = this.startData
     const startCenterPoint = {
       x: x + mask.x + mask.width / 2,
@@ -40,74 +36,24 @@ export class MaskScale {
     }
     // 根据开始位置，旋转后的左上角的位置
     const rotateLeftTop = calcRotatedPoint({ x: data.x, y: data.y }, startCenterPoint, this.startData.rotate)
-
     return rotateLeftTop
   }
 
-
-  handleScale (mousePosition,) {
-
+  handleScale (mousePosition, type) {
 
     // mask 以画布为基础，做拖拽计算
     const poi = this.scaleHandler.getAroundScaleData(mousePosition)
-
-    const newLeftTop = this.resetToRectPosition(poi)
-    // 监测mask 是否在rect 的内部
-    this.isMaskInRect(poi, newLeftTop)
-    // console.log(bool)
-    const maskData = this.toMaskOpsitionInRect(poi, newLeftTop)
+    // 中心点发生变化重新计算rect 的位置 , 保证统一旋转点
+    let rectData = this.resetToRectPosition(poi)
+    // 监测mask 是否在rect 的内容，精度丢失需要处理
+    rectData = this.toRectPosition(poi, rectData, type)
+    // 滑动的过快，会导致更新不过来，手动回到原始大小
+    const maskData = this.toMaskOpsitionInRect(poi, rectData)
 
     return {
       maskData,
-      rectData: { ...newLeftTop }
+      rectData
     }
-
-  }
-
-  createDom (data, currentCenterPoint) {
-    if (!dom) {
-      // const editorArea = document.getElementById('editor-area')
-      dom = document.createElement('div')
-
-      Object.assign(dom.style, {
-        position: 'absolute',
-        width: this.startData.width + 'px',
-        height: this.startData.height + 'px',
-        top: data.y + 'px',
-        left: data.x + 'px',
-        transform: `rotate(${this.startData.rotate}deg)`,
-        outline: '2px solid blue'
-      })
-
-      center = document.createElement('div')
-
-      // editorArea.appendChild(dom)
-      // editorArea.appendChild(center)
-    }
-
-    //  计算新的中心点
-    const rateX = (currentCenterPoint.x - data.x) / this.startData.width
-    const rateY = (currentCenterPoint.y - data.y) / this.startData.height
-
-    Object.assign(dom.style, {
-      left: data.x + 'px',
-      top: data.y + 'px',
-      transform: `rotate(${this.startData.rotate}deg)`,
-      transformOrigin: `${rateX * 100}% ${rateY * 100}%`
-    })
-
-
-    Object.assign(center.style, {
-      position: 'absolute',
-      top: currentCenterPoint.y + 'px',
-      left: currentCenterPoint.x + "px",
-      width: 4 + 'px',
-      height: 4 + 'px',
-      borderRadius: '100%',
-      background: 'red',
-    })
-
-
   }
 
   //2： 中心点发生变化重新计算rect 的位置 , 保证统一旋转点
@@ -119,44 +65,226 @@ export class MaskScale {
     }
 
     // 根据改变的中心点，计算出旋转的位置
-    const newLeftTop = calcRotatedPoint({ x: this.rectPosition.x, y: this.rectPosition.y }, currentCenterPoint, -this.startData.rotate)
-    this.createDom(newLeftTop, currentCenterPoint)
-
-    return newLeftTop
+    return calcRotatedPoint({ x: this.rectPosition.x, y: this.rectPosition.y }, currentCenterPoint, -this.startData.rotate)
   }
 
   keepDecimal (result, unit) {
     return Math.floor(result * Math.pow(10, unit)) / Math.pow(10, unit)
   }
 
-  //3： 判断mask 是否在 rect 内部
-  isMaskInRect (maskData, newLeftTop) {
+  getMaskAndRectPoint (maskData, newLeftTop, isInt = false) {
 
+    const data = {
+      maskX: maskData.x,
+      maskY: maskData.y,
+      maskW: maskData.width,
+      maskH: maskData.height,
+      rectX: newLeftTop.x,
+      rectY: newLeftTop.y,
+      rectW: this.startData.width,
+      rectH: this.startData.height,
+    }
 
-    // 存在精度丢失问题，暂时先换算成整数
-    const maskX = this.keepDecimal(maskData.x, 0)
-    const maskY = this.keepDecimal(maskData.y, 0)
-    const maskW = this.keepDecimal(maskData.width, 0)
-    const maskH = this.keepDecimal(maskData.height, 0)
-    const rectX = this.keepDecimal(newLeftTop.x, 0)
-    const rectY = this.keepDecimal(newLeftTop.y, 0)
-    const rectW = this.keepDecimal(this.startData.width, 0)
-    const rectH = this.keepDecimal(this.startData.height, 0)
+    if (isInt) {
+      Object.keys(data).forEach((key) => {
+        data[key] = this.keepDecimal(data[key], 0)
+      })
+    }
 
+    let { maskX, maskY, maskW, maskH, rectX, rectY, rectW, rectH } = data
 
     const maskTopLeft = [maskX, maskY]
     const maskBottomRight = [maskX + maskW, maskY + maskH]
-
     const rectTopLeft = [rectX, rectY]
     const rectBottomRight = [rectX + rectW, rectY + rectH]
 
+    return {
+      maskTopLeft, maskBottomRight, rectTopLeft, rectBottomRight
+    }
+  }
+
+  //3： 判断mask 是否在 rect 内部
+  isMaskInRect (maskData, newLeftTop) {
+    // 存在精度丢失问题，暂时先换算成整数
+    const { maskTopLeft, maskBottomRight, rectTopLeft, rectBottomRight } = this.getMaskAndRectPoint(maskData, newLeftTop, true)
 
     // 因为mask 和rect 的旋转点是相同的，所以可以这样比较
     return maskTopLeft[0] >= rectTopLeft[0] && maskTopLeft[1] >= rectTopLeft[1] && maskBottomRight[0] <= rectBottomRight[0] && maskBottomRight[1] <= rectBottomRight[1]
   }
 
+  dragAroundPoint (maskPosition, newRectLeftTop, type) {
+    let result
+    const startWidthRate = this.startData.width / this.maskData.width
+    const startHeightRate = this.startData.height / this.maskData.height
+    const width = maskPosition.width * startWidthRate
+    const height = maskPosition.height * startHeightRate
+    const diffW = maskPosition.width - this.maskData.width
+    const diffH = maskPosition.height - this.maskData.height
+
+
+    const rateW = width / this.startData.width
+    const rateH = height / this.startData.height
+
+    const diffMaskX = this.maskData.x * rateW - this.maskData.x
+    const diffMaskY = this.maskData.y * rateH - this.maskData.y
+
+    switch (type) {
+      case POSITION.leftTop: {
+        result = {
+          x: newRectLeftTop.x - diffW - diffMaskX,
+          y: newRectLeftTop.y - diffH - diffMaskY,
+          width,
+          height
+        }
+        break
+      }
+
+      case POSITION.rightTop: {
+        result = {
+          x: newRectLeftTop.x - diffMaskX,
+          y: newRectLeftTop.y - diffH - diffMaskY,
+          width,
+          height
+        }
+        break
+      }
+
+      case POSITION.leftBottom: {
+        result = {
+          x: newRectLeftTop.x - diffW - diffMaskX,
+          y: newRectLeftTop.y - diffMaskY,
+          width,
+          height
+        }
+        break
+      }
+      case POSITION.rightBottom: {
+        result = {
+          x: newRectLeftTop.x - diffMaskX,
+          y: newRectLeftTop.y - diffMaskY,
+          width,
+          height
+        }
+        break
+      }
+
+    }
+
+    return result
+
+  }
+
+  dragCenterPoint (maskPosition, newRectLeftTop, type) {
+    let result
+    const maskRightBottomPoint = {
+      x: maskPosition.x + maskPosition.width,
+      y: maskPosition.y + maskPosition.height
+    }
+
+    const rectRightBottomPoint = {
+      x: newRectLeftTop.x + this.startData.width,
+      y: newRectLeftTop.y + this.startData.height
+    }
+
+    const maskLeftTopPoint = {
+      x: maskPosition.x,
+      y: maskPosition.y
+    }
+
+    const rectLeftTopPoint = {
+      x: newRectLeftTop.x,
+      y: newRectLeftTop.y,
+    }
+
+    const isMaskInRect = this.isMaskInRect(maskPosition, newRectLeftTop)
+    if (isMaskInRect) {
+      // 滑动的过快，会导致更新不过来，手动回到原始大小
+      result = {
+        width: this.startData.width,
+        height: this.startData.height,
+        x: newRectLeftTop.x,
+        y: newRectLeftTop.y
+      }
+    } else {
+      switch (type) {
+        case POSITION.rightCenter: {
+          const width = this.startData.width + maskRightBottomPoint.x - rectRightBottomPoint.x
+          const rate = width / this.startData.width
+          const height = this.startData.height * rate
+          const diffH = height - this.startData.height
+          result = {
+            x: newRectLeftTop.x,
+            y: newRectLeftTop.y - diffH / 2,
+            width,
+            height
+          }
+          break;
+        }
+        case POSITION.leftCenter: {
+          const diffW = rectLeftTopPoint.x - maskLeftTopPoint.x
+          const width = this.startData.width + diffW
+          const rate = width / this.startData.width
+          const height = this.startData.height * rate
+          const diffH = height - this.startData.height
+          result = {
+            y: newRectLeftTop.y - diffH / 2,
+            x: newRectLeftTop.x - diffW,
+            width,
+            height
+
+          }
+          break
+        }
+        case POSITION.bottomCenter: {
+          const height = this.startData.height + maskRightBottomPoint.y - rectRightBottomPoint.y
+          const rate = height / this.startData.height
+          const width = this.startData.width * rate
+          const diffW = width - this.startData.width
+          result = {
+            x: newRectLeftTop.x - diffW / 2,
+            y: newRectLeftTop.y,
+            height,
+            width
+          }
+          break
+        }
+        case POSITION.topCenter: {
+          const diffH = rectLeftTopPoint.y - maskLeftTopPoint.y
+          const height = this.startData.height + diffH
+          const rate = height / this.startData.height
+          const width = this.startData.width * rate
+          const diffW = width - this.startData.width
+          result = {
+            x: newRectLeftTop.x - diffW / 2,
+            y: newRectLeftTop.y - diffH,
+            height,
+            width
+          }
+          break
+        }
+      }
+
+    }
+
+    return result
+  }
+
   //4： mask 超出了 rect 的范围 ，计算rect 的位置 
-  toRectPosition () { }
+  toRectPosition (maskPosition, newRectLeftTop, type) {
+    let result
+    const centerPonintList = [POSITION.topCenter, POSITION.rightCenter, POSITION.bottomCenter, POSITION.leftCenter]
+
+    if (centerPonintList.includes(type)) {
+      const centerData = this.dragCenterPoint(maskPosition, newRectLeftTop, type)
+      if (centerData) result = centerData
+    } else {
+      // 拖拽四个顶点
+      const aroundData = this.dragAroundPoint(maskPosition, newRectLeftTop, type)
+      if (aroundData) result = aroundData
+    }
+
+    return result
+  }
 
   //5： 计算 mask 在rect 中的位置
   toMaskOpsitionInRect (maskData, rectData) {
@@ -169,8 +297,6 @@ export class MaskScale {
   }
 
 }
-
-
 
 //  实现思路：
 /**
