@@ -230,6 +230,7 @@ img {
   height: 800px;
   pointer-events: none;
   z-index: 2;
+  overflow: hidden;
 }
 
 .mask-point {

@@ -103,14 +103,12 @@ export default {
   methods: {
     handleMove(index) {
       this.selectedIndex = index;
-
       document.addEventListener("mousemove", this.handleMousemove);
       document.addEventListener("mouseup", this.handleMouseup);
     },
 
     handleMousemove(e) {
       const data = this.actorList[this.selectedIndex];
-
       data.x += e.movementX;
       data.y += e.movementY;
     },
@@ -133,11 +131,6 @@ export default {
       const data = this.actorList[this.selectedIndex];
       Object.assign(data, newValue);
       maskValue && Object.assign(data.mask, maskValue);
-    },
-
-    changeWidth() {
-      const data = this.actorList[this.selectedIndex];
-      data.x += data.width;
     },
 
     runPixi() {
@@ -211,7 +204,6 @@ export default {
       this.c1.scale.set(scale.x, scale.y);
       // this.m.scale.set(scaleX, scaleY);
       // this.s1.scale.set(scaleX, scaleY);
-      console.log("width", width);
       this.m.width = width;
       this.m.height = height;
 
@@ -244,6 +236,7 @@ export default {
   box-shadow: inset 0 -3em 3em rgba(0, 0, 0, 0.1), 0 0 0 2px rgb(255, 255, 255),
     0.3em 0.3em 1em rgba(0, 0, 0, 0.3);
   border-radius: 5px;
+  overflow: hidden;
 }
 
 .container {
