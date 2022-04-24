@@ -1,6 +1,11 @@
 <template>
   <div class="box">
-    <el-button @click="handleReverse" class="reverse">反转</el-button>
+    <el-button @click="handleReverse('horizontal')" class="reverse"
+      >左右反转</el-button
+    >
+    <el-button @click="handleReverse('vertical')" class="reverse"
+      >上下反转</el-button
+    >
 
     <el-button @click="actorList[0].rotate += 2">旋转</el-button>
 
@@ -26,7 +31,6 @@
 import * as PIXI from "pixi.js";
 import Actor from "./actor.vue";
 import ActorDress from "./ActorDress";
-import { calcRotatedPoint } from "./drag";
 const actorList = [
   {
     id: 2,
@@ -38,7 +42,10 @@ const actorList = [
     originHeight: 267,
     rotate: 0,
     url: "https://st0.dancf.com/gaoding-material/0/images/223463/20191107-203726-aUYH9.jpg",
-    isReverse: false,
+    scale: {
+      x: 1,
+      y: 1,
+    },
     anchor: {
       x: 0,
       y: 0,
@@ -113,49 +120,17 @@ export default {
       document.removeEventListener("mouseup", this.handleMouseup);
     },
 
-    handleReverse() {
+    handleReverse(type) {
       const data = this.actorList[this.selectedIndex];
-
-      data.isReverse = !data.isReverse;
-
-      // const x = !data.isReverse ? data.x + data.width : data.x - data.width;
-      // const poi = calcRotatedPoint(
-      //   {
-      //     x: x,
-      //     y: data.y,
-      //   },
-      //   {
-      //     x: data.x,
-      //     y: data.y,
-      //   },
-      //   data.rotate
-      // );
-
-      // const mask = data.mask;
-      // const maskX = !data.isReverse ? mask.x + mask.width : mask.x - mask.width;
-      // const maskPoi = calcRotatedPoint(
-      //   {
-      //     x: maskX,
-      //     y: mask.y,
-      //   },
-      //   {
-      //     x: mask.x,
-      //     y: mask.y,
-      //   },
-      //   data.rotate
-      // );
-
-      // Object.assign(data, {
-      //   isReverse: !data.isReverse,
-      //   ...poi,
-      // });
-
-      // Object.assign(mask, { ...maskPoi });
+      if (type === "horizontal") {
+        data.scale.x = data.scale.x > 0 ? -1 : 1;
+      } else {
+        data.scale.y = data.scale.y > 0 ? -1 : 1;
+      }
     },
 
     updateHandler(newValue, maskValue) {
       const data = this.actorList[this.selectedIndex];
-
       Object.assign(data, newValue);
       maskValue && Object.assign(data.mask, maskValue);
     },
@@ -210,7 +185,21 @@ export default {
     },
 
     setData(data) {
-      let { rotate, mask, width, height, x, y } = data;
+      let {
+        rotate,
+        mask,
+        width,
+        height,
+        x,
+        y,
+        scale,
+        // originWidth,
+        // originHeight,
+      } = data;
+
+      // const scaleX = (width / originWidth) * scale.x;
+      // const scaleY = (height / originHeight) * scale.y;
+
       // 容器设置
       const pivotX = mask.x + mask.width / 2;
       const pivotY = mask.y + mask.height / 2;
@@ -219,41 +208,20 @@ export default {
       this.c1.angle = rotate;
       this.c1.pivot.set(pivotX, pivotY);
       this.c1.position.set(c1X, c1Y);
-
+      this.c1.scale.set(scale.x, scale.y);
+      // this.m.scale.set(scaleX, scaleY);
+      // this.s1.scale.set(scaleX, scaleY);
+      console.log("width", width);
       this.m.width = width;
       this.m.height = height;
 
       this.s1.width = width;
       this.s1.height = height;
 
-      // const { x, y } = this.toPositionData();
       // 设置mask
       this.m1.width = mask.width;
       this.m1.height = mask.height;
       this.m1.position.set(mask.x, mask.y);
-    },
-    toPositionData() {
-      const data = this.actorList[this.selectedIndex];
-      if (data.isReverse) {
-        const x = data.x + data.width;
-        return calcRotatedPoint(
-          {
-            x: x,
-            y: data.y,
-          },
-          {
-            x: data.x,
-            y: data.y,
-          },
-          data.rotate
-        );
-      }
-
-      // 加上蒙层之后，容器的大小就和蒙层一致
-      return {
-        x: data.x,
-        y: data.y,
-      };
     },
   },
 };
