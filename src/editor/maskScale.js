@@ -67,7 +67,7 @@ export class MaskScale {
   }
 
   getMaskAndRectPoint (maskData, newLeftTop, isInt = false) {
-    const data = {
+    let data = {
       maskX: maskData.x,
       maskY: maskData.y,
       maskW: maskData.width,
@@ -77,6 +77,20 @@ export class MaskScale {
       rectW: this.startData.width,
       rectH: this.startData.height,
     }
+    const startMaskCenter = {
+      x: newLeftTop.x + this.maskData.x + this.maskData.width / 2,
+      y: newLeftTop.y + this.maskData.y + this.maskData.height / 2
+    }
+    const { x, y } = this.startData.scale
+    // 如果发生翻转 计算真实的物理位置 
+    if (x < 0) {
+      // 计算真实的物理位置
+      data.rectX = startMaskCenter.x - (newLeftTop.x + this.startData.width - startMaskCenter.x)
+    }
+    if (y < 0) {
+      data.rectY = startMaskCenter.y - (newLeftTop.y + this.startData.height - startMaskCenter.y)
+    }
+
     if (isInt) {
       Object.keys(data).forEach((key) => {
         data[key] = this.keepDecimal(data[key], 0)
@@ -178,13 +192,14 @@ export class MaskScale {
 
   dragCenterPoint (maskPosition, newRectLeftTop, type) {
     let result
+
     // 开始矩形的右下坐标
-    const startRectRightBottomPoint = {
+    const startRectRightBottom = {
       x: newRectLeftTop.x + this.startData.width,
       y: newRectLeftTop.y + this.startData.height
     }
     // 开始矩形的左上坐标
-    const startRectLeftTopPoint = {
+    const startRectLeftTop = {
       x: newRectLeftTop.x,
       y: newRectLeftTop.y,
     }
@@ -198,17 +213,15 @@ export class MaskScale {
       x: newRectLeftTop.x + this.maskData.x,
       y: newRectLeftTop.y + this.maskData.y
     }
-    // 开始蒙层的中心点
-    const startMaskCenter = {
+    // 开始蒙层的中心点 以原图为基准
+    const startMaskCenterInRect = {
       x: this.maskData.x + this.maskData.width / 2,
       y: this.maskData.y + this.maskData.height / 2
     }
 
-    // 矩形开始的宽高比
-    const startRectSizeRate = this.startData.height / this.startData.width
-
     const isMaskInRect = this.isMaskInRect(maskPosition, newRectLeftTop, type)
     if (isMaskInRect) {
+
       // 滑动的过快，会导致更新不过来，手动回到原始大小
       result = {
         width: this.startData.width,
@@ -216,12 +229,48 @@ export class MaskScale {
         x: newRectLeftTop.x,
         y: newRectLeftTop.y
       }
+
+      const { x, y } = this.startData.scale
+      if (x < 0 || y < 0) {
+        // 真实的物理位置
+
+        switch (type) {
+          case POSITION.rightCenter: {
+            // 计算mask x轴 扩大的长度
+            const diffX = maskPosition.x + maskPosition.width - startMaskRigthBottom.x
+            result.x += diffX
+            break
+          }
+          case POSITION.leftCenter: {
+            const diffX = startMaskLeftTop.x - maskPosition.x
+            result.x -= diffX
+            break
+          }
+          case POSITION.bottomCenter: {
+            const diffY = maskPosition.y + maskPosition.height - startMaskRigthBottom.y
+            result.y += diffY
+            break
+          }
+          case POSITION.topCenter: {
+            const diffY = startMaskLeftTop.y - maskPosition.y
+            result.y -= diffY
+            break
+          }
+        }
+      }
+
+
     } else {
+
+      // 矩形开始的宽高比
+      const startRectSizeRate = this.startData.height / this.startData.width
+
+      const { x, y } = this.startData.scale
 
       switch (type) {
         case POSITION.rightCenter: {
-          // mask 和 rect 同比例缩放 
-          const maskWidthDiff = startRectRightBottomPoint.x - startMaskRigthBottom.x
+          // mask 和 rect 同比例缩放，弥补宽度
+          const maskWidthDiff = x > 0 ? startRectRightBottom.x - startMaskRigthBottom.x : startMaskLeftTop.x - startRectLeftTop.x
           const startWidthRate = this.startData.width / (this.maskData.width + maskWidthDiff)
           const width = maskPosition.width * startWidthRate
           const height = width * startRectSizeRate
@@ -229,9 +278,11 @@ export class MaskScale {
 
           // x 的距离也是需要同比例增大
           const rateW = width / this.startData.width
-          const diffMaskX = this.maskData.x * rateW - this.maskData.x
+          const maskStartX = this.maskData.x - newRectLeftTop.x
+          const diffMaskX = x > 0 ? this.maskData.x * rateW - this.maskData.x : this.maskData.x - maskStartX - maskPosition.x
 
-          const anchorY = startMaskCenter.y / this.startData.height
+
+          const anchorY = startMaskCenterInRect.y / this.startData.height
 
           result = {
             x: newRectLeftTop.x - diffMaskX,
@@ -242,18 +293,22 @@ export class MaskScale {
           break;
         }
         case POSITION.leftCenter: {
-          const maskWidthDiff = startMaskLeftTop.x - startRectLeftTopPoint.x
+          const maskWidthDiff = x > 0 ? startMaskLeftTop.x - startRectLeftTop.x : startRectRightBottom.x - startMaskRigthBottom.x
           const startWidthRate = this.startData.width / (this.maskData.width + maskWidthDiff)
 
           const width = maskPosition.width * startWidthRate
           const height = width * startRectSizeRate
           const diffH = height - this.startData.height
 
+          // x 的距离也是需要同比例增大
+          const rateW = width / this.startData.width
+          // const diff = startRectRightBottom.x - startMaskRigthBottom.x
           // mask 的开始坐标，应该是和rect 的x 重合的时候。 
           const maskStartX = this.maskData.x - newRectLeftTop.x
-          const diffMaskX = this.maskData.x - maskStartX - maskPosition.x
+          const diffMaskX = x > 0 ? this.maskData.x - maskStartX - maskPosition.x : this.maskData.x * rateW
+          const anchorY = startMaskCenterInRect.y / this.startData.height
 
-          const anchorY = startMaskCenter.y / this.startData.height
+          console.log(diffMaskX)
 
           result = {
             x: newRectLeftTop.x - diffMaskX,
@@ -265,7 +320,7 @@ export class MaskScale {
         }
 
         case POSITION.bottomCenter: {
-          const maskHeightDiff = startRectRightBottomPoint.y - startMaskRigthBottom.y
+          const maskHeightDiff = y > 0 ? startRectRightBottom.y - startMaskRigthBottom.y : startMaskLeftTop.y - startRectLeftTop.y
           const startHeightRate = this.startData.height / (this.maskData.height + maskHeightDiff)
 
           const height = maskPosition.height * startHeightRate
@@ -274,9 +329,10 @@ export class MaskScale {
 
           // y 的距离也是需要同比例增大
           const rateW = height / this.startData.height
-          const diffMaskY = this.maskData.y * rateW - this.maskData.y
+          const maskStartY = this.maskData.y - newRectLeftTop.y
+          const diffMaskY = y > 0 ? this.maskData.y * rateW - this.maskData.y : this.maskData.y - maskStartY - maskPosition.y
 
-          const anctorX = startMaskCenter.x / this.startData.width
+          const anctorX = startMaskCenterInRect.x / this.startData.width
 
           result = {
             x: newRectLeftTop.x - diffW * anctorX,
@@ -288,7 +344,7 @@ export class MaskScale {
         }
 
         case POSITION.topCenter: {
-          const maskHeightDiff = startMaskLeftTop.y - startRectLeftTopPoint.y
+          const maskHeightDiff = startMaskLeftTop.y - startRectLeftTop.y
           const startHeightRate = this.startData.height / (this.maskData.height + maskHeightDiff)
           const height = maskPosition.height * startHeightRate
           const width = height / startRectSizeRate
@@ -298,7 +354,7 @@ export class MaskScale {
           const maskStartY = this.maskData.y - newRectLeftTop.y
           const diffMaskY = this.maskData.y - maskStartY - maskPosition.y
 
-          const anctorX = startMaskCenter.x / this.startData.width
+          const anctorX = startMaskCenterInRect.x / this.startData.width
 
           result = {
             x: newRectLeftTop.x - diffW * anctorX,

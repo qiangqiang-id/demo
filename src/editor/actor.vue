@@ -6,7 +6,6 @@
 
 
 <script>
-// import { calcRotatedPoint } from "./drag";
 export default {
   props: {
     data: {
@@ -29,7 +28,7 @@ export default {
         position: "absolute",
         top: data.y + "px",
         left: data.x + "px",
-        transform: `rotate(${data.rotate}deg)`,
+        transform: `rotate(${data.rotate}deg) scale(${data.scale.x}, ${data.scale.y})`,
         transformOrigin: `${rateX * 100}% ${rateY * 100}%`,
       };
     },

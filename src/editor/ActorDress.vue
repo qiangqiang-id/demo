@@ -115,8 +115,8 @@ export default {
         startRotate: this.data.rotate,
         startX: e.clientX - this.editorAreaInfo.x,
         startY: e.clientY - this.editorAreaInfo.y,
-        centerX: this.data.x + this.data.width / 2,
-        centerY: this.data.y + this.data.height / 2,
+        centerX: this.data.x + this.data.mask.x + this.data.mask.width / 2,
+        centerY: this.data.y + this.data.mask.y + this.data.mask.height / 2,
       };
 
       const rotateHandler = new RotateHandler(initData);
