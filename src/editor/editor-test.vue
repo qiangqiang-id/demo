@@ -71,9 +71,10 @@ export default {
     return {
       actorList,
       selectedIndex: 0,
-      s1: null,
-      m1: null,
-      m: null,
+      c1: null, // 容器
+      s1: null, // 图片
+      m1: null, // 蒙层
+      m: null, // 站位图形，保证容器和图片一样大
     };
   },
 
@@ -178,20 +179,7 @@ export default {
     },
 
     setData(data) {
-      let {
-        rotate,
-        mask,
-        width,
-        height,
-        x,
-        y,
-        scale,
-        // originWidth,
-        // originHeight,
-      } = data;
-
-      // const scaleX = (width / originWidth) * scale.x;
-      // const scaleY = (height / originHeight) * scale.y;
+      let { rotate, mask, width, height, x, y, scale } = data;
 
       // 容器设置
       const pivotX = mask.x + mask.width / 2;
@@ -202,8 +190,7 @@ export default {
       this.c1.pivot.set(pivotX, pivotY);
       this.c1.position.set(c1X, c1Y);
       this.c1.scale.set(scale.x, scale.y);
-      // this.m.scale.set(scaleX, scaleY);
-      // this.s1.scale.set(scaleX, scaleY);
+
       this.m.width = width;
       this.m.height = height;
 
