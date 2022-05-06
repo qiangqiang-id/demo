@@ -3,13 +3,14 @@ import { ScaleHandler, calcRotatedPoint } from './drag'
 import { POSITION } from './constants';
 
 export class MaskScale {
-  constructor(containerStartData, type) {
+  constructor(containerStartData, type, isAutoClip = true) {
     // 父容器的开始位置
     this.startData = { ...containerStartData, }
     this.maskData = { ...containerStartData.mask }
     this.positionType = type
-    this.scaleHandler = new ScaleHandler(containerStartData, type, this.getMaskInEditerAreaPosition())
+    this.scaleHandler = new ScaleHandler(containerStartData, type, this.getMaskInEditerAreaPosition(), isAutoClip)
     this.rectPosition = this.init(containerStartData)
+    this.isAutoClip = isAutoClip
   }
 
   // 获取mask 在 画布中的 位置
@@ -25,14 +26,14 @@ export class MaskScale {
   }
 
   // 根据开始位置，旋转后的左上角的位置
-  init (data) {
-    const { x, y, mask } = this.startData
+  init () {
+    const { x, y, mask, rotate } = this.startData
     const startCenterPoint = {
       x: x + mask.x + mask.width / 2,
       y: y + mask.y + mask.height / 2
     }
     // 根据开始位置，旋转后的左上角的位置
-    return calcRotatedPoint({ x: data.x, y: data.y }, startCenterPoint, this.startData.rotate)
+    return calcRotatedPoint({ x, y }, startCenterPoint, rotate)
   }
 
   handleScale (mousePosition, type) {
@@ -42,15 +43,33 @@ export class MaskScale {
     // 中心点发生变化重新计算rect 的位置 , 保证统一旋转点
     let rectData = this.resetToRectPosition(poi)
     // 监测mask 是否在rect 的内容，精度丢失需要处理
-    rectData = this.toRectPosition(poi, rectData, type)
+    if (this.isAutoClip) {
+      rectData = this.toRectPosition(poi, rectData, type)
+    } else {
+      rectData.width = this.startData.width
+      rectData.height = this.startData.height
+    }
     // 滑动的过快，会导致更新不过来，手动回到原始大小
     const maskData = this.toMaskOpsitionInRect(poi, rectData)
+
+
+
+    //计算锚点
+    const rateX = (rectData.x + maskData.x + maskData.width / 2 - rectData.x) / rectData.width;
+    const rateY = (rectData.y + maskData.y + maskData.height / 2 - rectData.y) / rectData.height;
+
+    rectData.anchor = {
+      x: rateX,
+      y: rateY
+    }
+
 
     return {
       maskData,
       rectData
     }
   }
+
 
   //2： 中心点发生变化重新计算rect 的位置 , 保证统一旋转点
   resetToRectPosition (maskData) {
@@ -138,7 +157,6 @@ export class MaskScale {
     const diffW = maskPosition.width - this.maskData.width
     const diffH = maskPosition.height - this.maskData.height
 
-
     const rateW = width / this.startData.width
     const rateH = height / this.startData.height
 
@@ -155,7 +173,6 @@ export class MaskScale {
         }
         break
       }
-
       case POSITION.rightTop: {
         result = {
           x: newRectLeftTop.x - diffMaskX,
@@ -165,7 +182,6 @@ export class MaskScale {
         }
         break
       }
-
       case POSITION.leftBottom: {
         result = {
           x: newRectLeftTop.x - diffW - diffMaskX,
@@ -237,8 +253,6 @@ export class MaskScale {
 
       const { x, y } = this.startData.scale
       if (x < 0) {
-        // 真实的物理位置
-
         switch (type) {
           case POSITION.rightCenter: {
             // 计算mask x轴 扩大的长度
@@ -251,10 +265,8 @@ export class MaskScale {
             result.x -= diffX
             break
           }
-
         }
       }
-
       if (y < 0) {
         switch (type) {
           case POSITION.bottomCenter: {
@@ -269,7 +281,6 @@ export class MaskScale {
           }
         }
       }
-
 
     } else {
 
@@ -294,7 +305,6 @@ export class MaskScale {
           const rateW = width / this.startData.width
           const maskStartX = this.maskData.x - newRectLeftTop.x
           const diffMaskX = x > 0 ? this.maskData.x * rateW - this.maskData.x : this.maskData.x - maskStartX - maskPosition.x
-
 
           const anchorY = startMaskCenterInRect.y / this.startData.height
 
@@ -329,7 +339,6 @@ export class MaskScale {
           }
           break
         }
-
         case POSITION.bottomCenter: {
           const maskHeightDiff = y > 0 ? startRectRightBottom.y - startMaskRigthBottom.y : startMaskLeftTop.y - startRectLeftTop.y
           const startHeightRate = this.startData.height / (this.maskData.height + maskHeightDiff)
@@ -381,7 +390,6 @@ export class MaskScale {
     return result
   }
 
-
   //4： mask 超出了 rect 的范围 ，计算rect 的位置 
   toRectPosition (maskPosition, newRectLeftTop, type) {
     let result
@@ -415,8 +423,4 @@ export class MaskScale {
  * 4、不在rect内部，就计算 rect 位置和大小  => 公式？
  * 5、转换 mask 在rect中的位置  => 公式？
  */
-
-
-
-
 

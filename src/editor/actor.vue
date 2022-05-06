@@ -17,10 +17,6 @@ export default {
   computed: {
     actorStyle() {
       const data = this.data;
-      const mask = data.mask;
-
-      const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
-      const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;
 
       return {
         width: data.width + "px",
@@ -29,7 +25,7 @@ export default {
         top: data.y + "px",
         left: data.x + "px",
         transform: `rotate(${data.rotate}deg) scale(${data.scale.x}, ${data.scale.y})`,
-        transformOrigin: `${rateX * 100}% ${rateY * 100}%`,
+        transformOrigin: `${data.anchor.x * 100}% ${data.anchor.y * 100}%`,
       };
     },
   },

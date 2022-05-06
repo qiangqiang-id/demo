@@ -92,15 +92,13 @@ const pointInRect = (p0, p1, p2) => {
 
 export class ScaleHandler {
 
-  constructor(data, position, maskData) {
+  constructor(data, position, maskData, isLockProportions = true) {
     this.data = maskData
     this.position = position
-    this.isLockProportions = true
+    this.isLockProportions = isLockProportions
     this.angle = data.rotate
     this.currentData = data
   }
-
-
 
   // 获取拉四个角度的位置数据
   getAroundScaleData (mousePosition) {
@@ -266,7 +264,7 @@ export class ScaleHandler {
         }
 
         if (newWidth < 20 || (newHeight < 20)) {
-          return { width, height, x, y }
+          return { width: 20, height: 20, x, y }
         }
 
         return {
@@ -305,10 +303,10 @@ export class ScaleHandler {
         }
 
 
-        if (!pointInRect(newCenter, handlePoint, sPoint) || newHeight < 10) {
+        if (!pointInRect(newCenter, handlePoint, sPoint) || newHeight < 20) {
           return {
             width,
-            height,
+            height: 20,
             x,
             y
           }
@@ -342,7 +340,7 @@ export class ScaleHandler {
           y: rotatedMiddlePoint.y + (Math.abs(sPoint.y - rotatedMiddlePoint.y) / 2) * (rotatedMiddlePoint.y > sPoint.y ? -1 : 1)
         }
 
-        if (!pointInRect(newCenter, handlePoint, sPoint) || newWidth < 10) {
+        if (!pointInRect(newCenter, handlePoint, sPoint) || newWidth < 20) {
           return { width, height, x, y }
         }
 
@@ -490,8 +488,6 @@ export class ScaleHandler {
 
 }
 
-
-
 export class RotateHandler {
   constructor(initData) {
     this.initData = initData
@@ -499,7 +495,6 @@ export class RotateHandler {
   }
   rotateHandler (mousePosition) {
     const { startY, startX, centerY, centerX, startRotate } = this.initData
-
     // 旋转前的角度
     const rotateDegreeBefore =
       Math.atan2(startY - centerY, startX - centerX) / (Math.PI / 180);
@@ -508,5 +503,5 @@ export class RotateHandler {
       Math.atan2(mousePosition.y - centerY, mousePosition.x - centerX) / (Math.PI / 180);
     // 获取旋转的角度值， startRotate 为初始角度值
     return rotateDegreeAfter - rotateDegreeBefore + startRotate;
-  }
+  } a
 }

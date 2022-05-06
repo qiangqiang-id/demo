@@ -9,6 +9,8 @@
 
     <el-button @click="actorList[0].rotate += 2">旋转</el-button>
 
+    <el-button @click.stop="handleClip">裁剪</el-button>
+
     <div id="editor-area">
       <Actor
         :id="`${item.id}`"
@@ -19,10 +21,16 @@
         @mousedown.native="handleMove(index, $event)"
       />
     </div>
+    <ActorDress v-show="!isClip" @update="updateHandler" :data="selectedData" />
 
-    <ActorDress @update="updateHandler" :data="selectedData" />
+    <canvas v-show="!isClip" id="my-canvas"></canvas>
 
-    <canvas id="my-canvas"></canvas>
+    <Clipping
+      v-if="isClip"
+      :data="selectedData"
+      @closeClip="closeClip"
+      @update="updateHandler"
+    />
   </div>
 </template>
 
@@ -31,6 +39,7 @@
 import * as PIXI from "pixi.js";
 import Actor from "./actor.vue";
 import ActorDress from "./ActorDress";
+import Clipping from "./Clipping.vue";
 const actorList = [
   {
     id: 2,
@@ -47,8 +56,8 @@ const actorList = [
       y: 1,
     },
     anchor: {
-      x: 0,
-      y: 0,
+      x: 0.5,
+      y: 0.5,
     },
     mask: {
       x: 0,
@@ -65,6 +74,7 @@ export default {
   components: {
     ActorDress,
     Actor,
+    Clipping,
   },
 
   data() {
@@ -75,6 +85,7 @@ export default {
       s1: null, // 图片
       m1: null, // 蒙层
       m: null, // 站位图形，保证容器和图片一样大
+      isClip: false,
     };
   },
 
@@ -201,6 +212,18 @@ export default {
       this.m1.width = mask.width;
       this.m1.height = mask.height;
       this.m1.position.set(mask.x, mask.y);
+    },
+
+    handleClip() {
+      this.isClip = true;
+    },
+
+    closeClip() {
+      this.isClip = false;
+      this.$nextTick(() => {
+        // this.runPixi();
+        // this.setData();
+      });
     },
   },
 };

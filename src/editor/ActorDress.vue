@@ -47,9 +47,9 @@ export default {
       type: Object,
     },
 
-    isCuting: {
+    isAutoClip: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
 
@@ -83,7 +83,7 @@ export default {
 
   methods: {
     dragScale(type, event) {
-      const maskScale = new MaskScale(this.data, type);
+      const maskScale = new MaskScale(this.data, type, this.isAutoClip);
 
       dragAction(event, {
         init: () => {
@@ -147,10 +147,10 @@ export default {
   computed: {
     actorDressStyle() {
       const data = this.data;
-      const mask = data.mask;
+      // const mask = data.mask;
 
-      const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
-      const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;
+      // const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
+      // const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;
 
       return {
         position: "absolute",
@@ -159,7 +159,7 @@ export default {
         width: data.width + "px",
         height: data.height + "px",
         transform: `rotate(${data.rotate}deg)`,
-        transformOrigin: `${rateX * 100}% ${rateY * 100}%`,
+        transformOrigin: `${data.anchor.x * 100}% ${data.anchor.y * 100}%`,
       };
     },
 
