@@ -100,8 +100,8 @@ export class ScaleHandler {
     this.currentData = data
   }
 
-  // 获取拉四个角度的位置数据
-  getAroundScaleData (mousePosition) {
+
+  handlerScale (mousePosition) {
 
 
     const { sPoint, proportion, handlePoint } = this.getKeyVariable()

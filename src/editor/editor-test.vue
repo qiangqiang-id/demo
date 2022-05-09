@@ -13,6 +13,7 @@
 
     <div id="editor-area">
       <Actor
+        v-show="!isClip"
         :id="`${item.id}`"
         class="actor"
         v-for="(item, index) in actorList"

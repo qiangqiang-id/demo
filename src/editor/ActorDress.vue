@@ -38,6 +38,7 @@
 <script>
 import { dragAction, RotateHandler } from "./drag";
 import { MaskScale } from "./maskScale";
+import ManualClip from "./manualCilping";
 
 import { pointList, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 
@@ -83,7 +84,9 @@ export default {
 
   methods: {
     dragScale(type, event) {
-      const maskScale = new MaskScale(this.data, type, this.isAutoClip);
+      const maskScale = this.isAutoClip
+        ? new MaskScale(this.data, type, this.isAutoClip)
+        : new ManualClip(this.data, type, this.isAutoClip);
 
       dragAction(event, {
         init: () => {
@@ -147,10 +150,6 @@ export default {
   computed: {
     actorDressStyle() {
       const data = this.data;
-      // const mask = data.mask;
-
-      // const rateX = (data.x + mask.x + mask.width / 2 - data.x) / data.width;
-      // const rateY = (data.y + mask.y + mask.height / 2 - data.y) / data.height;
 
       return {
         position: "absolute",

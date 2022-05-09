@@ -39,7 +39,7 @@ export class MaskScale {
   handleScale (mousePosition, type) {
 
     // mask 以画布为基础，做拖拽计算
-    const poi = this.scaleHandler.getAroundScaleData(mousePosition)
+    const poi = this.scaleHandler.handlerScale(mousePosition)
     // 中心点发生变化重新计算rect 的位置 , 保证统一旋转点
     let rectData = this.resetToRectPosition(poi)
     // 监测mask 是否在rect 的内容，精度丢失需要处理
@@ -49,10 +49,7 @@ export class MaskScale {
       rectData.width = this.startData.width
       rectData.height = this.startData.height
     }
-    // 滑动的过快，会导致更新不过来，手动回到原始大小
     const maskData = this.toMaskOpsitionInRect(poi, rectData)
-
-
 
     //计算锚点
     const rateX = (rectData.x + maskData.x + maskData.width / 2 - rectData.x) / rectData.width;

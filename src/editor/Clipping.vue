@@ -3,34 +3,41 @@
     <div class="clip-area">
       <div ref="rectRef" class="rect" :style="rectStyle">
         <img class="img" :src="data.url" />
-        <div class="mask" @mousedown="handleMove" :style="maskStyle">
-          <!-- 九宫格 -->
-          <div
-            class="vertical-line"
-            v-for="num in 2"
-            :key="num + 'vertical'"
-            :style="{ left: (data.mask.width / 3) * num + 'px' }"
-          ></div>
-          <div
-            class="horizontal-line"
-            v-for="num in 2"
-            :key="num + 'horizontal'"
-            :style="{ top: (data.mask.height / 3) * num + 'px' }"
-          ></div>
-        </div>
+      </div>
+
+      <div
+        class="mask"
+        ref="maskRef"
+        @mousedown="handleMove"
+        :style="maskStyle"
+      >
+        <!-- 九宫格 -->
+        <div
+          class="vertical-line"
+          v-for="num in 2"
+          :key="num + 'vertical'"
+          :style="{ left: (maskData.width / 3) * num + 'px' }"
+        ></div>
+        <div
+          class="horizontal-line"
+          v-for="num in 2"
+          :key="num + 'horizontal'"
+          :style="{ top: (maskData.height / 3) * num + 'px' }"
+        ></div>
       </div>
     </div>
 
-    <ActorDress :data="data" @update="updateHandler" :isAutoClip="false" />
+    <ClipDress :data="data" :maskData="maskData" @update="updateHandler" />
   </div>
 </template>
 
 <script>
-import ActorDress from "./ActorDress.vue";
-import { calcRotatedPoint } from "./drag";
+import ClipDress from "./ClipDress.vue";
+import { dragAction, calcRotatedPoint } from "./drag";
+import { MaskMove } from "./manualCilping";
 export default {
   components: {
-    ActorDress,
+    ClipDress,
   },
   props: {
     data: {
@@ -41,7 +48,18 @@ export default {
   data() {
     return {
       pointList: [],
+      maskData: {
+        // x: 0,
+        // y: 0,
+        // width: 0,
+        // height: 0,
+        // rotate: 0,
+      },
     };
+  },
+
+  created() {
+    this.initActorData();
   },
 
   mounted() {
@@ -54,7 +72,7 @@ export default {
 
   computed: {
     rectStyle() {
-      const { x, y, width, height, anchor, rotate, scale } = this.data;
+      const { x, y, width, height, rotate, scale, anchor } = this.data;
       return {
         position: "absolute",
         left: x + "px",
@@ -62,79 +80,99 @@ export default {
         width: width + "px",
         height: height + "px",
         transform: `rotate(${rotate}deg) scale(${scale.x},${scale.y})`,
-        transformOrigin: `${anchor.x * 100}% ${anchor.y * 100}%`,
         overflow: "hidden",
+        transformOrigin: `${anchor.x * 100}% ${anchor.y * 100}%`,
       };
     },
 
     maskStyle() {
-      const { x, y, width, height } = this.data.mask;
+      const { x, y, width, height, rotate } = this.maskData;
       return {
         position: "absolute",
         top: y + "px",
         left: x + "px",
         width: width + "px",
         height: height + "px",
+        transform: `rotate(${rotate}deg)`,
         boxShadow: "rgba(255,255,255,.4) 0px 0px 0px 2005px",
       };
     },
   },
 
   methods: {
+    initActorData() {
+      const { x, y, mask, rotate } = this.data;
+
+      this.maskData = {
+        x: x + mask.x,
+        y: y + mask.y,
+        width: mask.width,
+        height: mask.height,
+        rotate,
+        anchor: { x: 0.5, y: 0.5 },
+      };
+    },
+
     handleClickDocment(e) {
       const rectDom = this.$refs.rectRef;
-      if (!rectDom.contains(e.target)) {
+      const maskDom = this.$refs.maskRef;
+      if (!rectDom.contains(e.target) && !maskDom.contains(e.target)) {
+        const rotatedPoint = this.calRotatedRectPoint();
+        const { x, y, width, height } = this.maskData;
+        const maskCenter = {
+          x: x + width / 2,
+          y: y + height / 2,
+        };
+        const newPoint = calcRotatedPoint(
+          rotatedPoint,
+          maskCenter,
+          -this.data.rotate
+        );
+
+        const anchor = {
+          x: (x - newPoint.x + width / 2) / this.data.width,
+          y: (y - newPoint.y + height / 2) / this.data.height,
+        };
+
+        this.$emit(
+          "update",
+          { ...newPoint, anchor },
+          {
+            x: x - newPoint.x,
+            y: y - newPoint.y,
+            width,
+            height,
+          }
+        );
+
         this.$emit("closeClip");
       }
     },
 
-    handleMove() {
-      const { mask } = this.data;
-      // const startRectData = { x, y, width, height };
-      // const startMaskData = { ...mask };
-      const handleMousemove = (e) => {
-        this.updateHandler(
-          {},
-          { x: mask.x + e.movementX, y: mask.y + e.movementY }
-        );
+    calRotatedRectPoint() {
+      const { x, y, width, height, anchor, rotate } = this.data;
+      const center = {
+        x: x + width * anchor.x,
+        y: y + height * anchor.y,
       };
 
-      const handleMouseup = () => {
-        document.removeEventListener("mousemove", handleMousemove);
-        document.removeEventListener("mouseup", handleMouseup);
-      };
-
-      document.addEventListener("mousemove", handleMousemove);
-      document.addEventListener("mouseup", handleMouseup);
+      return calcRotatedPoint({ x, y }, center, rotate);
     },
 
-    updateHandler(newValue, maskValue) {
-      this.$emit("update", newValue, maskValue);
+    handleMove(e) {
+      const maskMove = new MaskMove(this.data, this.maskData, e);
+      dragAction(e, {
+        init: () => {},
+        move: (e) => {
+          const data = maskMove.handlerMove(e);
+          Object.assign(this.maskData, data);
+        },
+        end: () => {},
+      });
     },
 
-    // 根据开始位置，旋转后的左上角的位置
-    toRectforRotate() {
-      const { x, y, mask, rotate } = this.data;
-      const startCenterPoint = {
-        x: x + mask.x + mask.width / 2,
-        y: y + mask.y + mask.height / 2,
-      };
-      // 根据开始位置，旋转后的左上角的位置
-      return calcRotatedPoint({ x, y }, startCenterPoint, rotate);
-    },
-
-    //2： 中心点发生变化重新计算rect 的位置 , 保证统一旋转点
-    resetToRectPosition(maskData, rectPosition) {
-      const currentCenterPoint = {
-        x: maskData.x + maskData.width / 2,
-        y: maskData.y + maskData.height / 2,
-      };
-      // 根据改变的中心点，计算出旋转的位置
-      return calcRotatedPoint(
-        { x: rectPosition.x, y: rectPosition.y },
-        currentCenterPoint,
-        -this.data.rotate
-      );
+    updateHandler(data) {
+      Object.assign(this.maskData, data);
     },
   },
 };
@@ -188,9 +226,9 @@ export default {
   outline: 2px solid skyblue;
 }
 
-.point-container {
+/* .point-container {
   pointer-events: none;
-}
+} */
 .rect-point,
 .mask-point {
   width: 10px;
