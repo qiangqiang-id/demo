@@ -1,5 +1,6 @@
 import { calcRotatedPoint, ScaleHandler } from './drag'
 import { POSITION } from './constants';
+import { calcPhysicsPosition } from './helper'
 
 export class MaskMove {
   constructor(rectData, maskData, event) {
@@ -18,11 +19,13 @@ export class MaskMove {
   }
 
   getRectData (data) {
-    const { x, y, width, height, anchor } = data
+    let { x, y, width, height, anchor } = data
+
     let center = {
       x: x + width * anchor.x,
       y: y + height * anchor.y,
     }
+
     let leftTop = {
       x,
       y,
@@ -32,6 +35,7 @@ export class MaskMove {
       center,
       rotateLeftTop
     }
+
   }
 
   handlerMove (event) {
@@ -70,7 +74,9 @@ export class MaskMove {
 
     let list = [newMaskRotatedPoint, newMaskCenter]
 
-    let projectionX = newMaskPoint.x - this.startRectData.x
+    const { x: physicsX, y: physicsY } = calcPhysicsPosition(this.startRectData)
+
+    let projectionX = newMaskPoint.x - physicsX
     if (projectionX < minLeft || projectionX > maxLeft) {
       projectionX = (projectionX < minLeft ? minLeft : maxLeft) - projectionX
       list.forEach((item) => {
@@ -79,7 +85,7 @@ export class MaskMove {
       });
     }
 
-    let projectionY = newMaskPoint.y - this.startRectData.y
+    let projectionY = newMaskPoint.y - physicsY
     if (projectionY < minTop || projectionY > maxTop) {
       projectionY = (projectionY < minTop ? minTop : maxTop) - projectionY
       list.forEach((item) => {
@@ -116,16 +122,6 @@ export class MasKScale {
     }
   }
 
-  updatedTempData (mousePosition) {
-    const rectTempData = this.getRectData(this.startRectData)
-    const maskTempData = this.getRectData(mousePosition)
-
-    return {
-      rectTempData,
-      maskTempData
-    }
-  }
-
   getRectData (data) {
     const { x, y, width, height, anchor = { x: 0.5, y: 0.5 } } = data
     let center = {
@@ -151,7 +147,7 @@ export class MasKScale {
 
     const { width: rectW, height: rectH, } = this.startRectData
     const { width: maskW, height: maskH, } = this.startMaskData
-    const { x: maskX, y: maskY } = this.clacMaskPositionInRect()
+    let { x: maskX, y: maskY } = this.clacMaskPositionInRect()
     let maxData
     switch (this.type) {
       case POSITION.leftCenter: {
@@ -212,17 +208,22 @@ export class MasKScale {
         }
       }
     }
+
     return maxData
   }
 
   clacMaskPositionInRect () {
     const maskData = this.startMaskData
-    const { rectTempData, maskTempData } = this.updatedTempData(maskData)
+    const rectData = this.startRectData
 
-    const newRectData = calcRotatedPoint(rectTempData.rotateLeftTop, maskTempData.center, -this.startRectData.rotate)
+    const rectTempData = this.getRectData(rectData)
+    const maskTempData = this.getRectData(maskData)
+
+    const newRectData = calcRotatedPoint(rectTempData.rotateLeftTop, maskTempData.center, -rectData.rotate)
+    const { x: physicsX, y: physicsY } = calcPhysicsPosition({ ...rectData, ...newRectData })
     return {
-      x: maskData.x - newRectData.x,
-      y: maskData.y - newRectData.y,
+      x: maskData.x - physicsX,
+      y: maskData.y - physicsY,
     }
 
   }

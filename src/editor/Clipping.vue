@@ -35,6 +35,7 @@
 import ClipDress from "./ClipDress.vue";
 import { dragAction, calcRotatedPoint } from "./drag";
 import { MaskMove } from "./manualCilping";
+import { calcPhysicsPosition } from "./helper";
 export default {
   components: {
     ClipDress,
@@ -102,7 +103,6 @@ export default {
   methods: {
     initActorData() {
       const { x, y, mask, rotate } = this.data;
-
       this.maskData = {
         x: x + mask.x,
         y: y + mask.y,
@@ -123,12 +123,23 @@ export default {
           x: x + width / 2,
           y: y + height / 2,
         };
+
         const newPoint = calcRotatedPoint(
           rotatedPoint,
           maskCenter,
           -this.data.rotate
         );
 
+        const { scale } = this.data;
+        if (scale.x < 0) {
+          const right = newPoint.x + this.data.width;
+          newPoint.x = maskCenter.x - (right - maskCenter.x);
+        }
+
+        if (scale.y < 0) {
+          const bottom = newPoint.y + this.data.height;
+          newPoint.y = maskCenter.y - (bottom - maskCenter.y);
+        }
         const anchor = {
           x: (x - newPoint.x + width / 2) / this.data.width,
           y: (y - newPoint.y + height / 2) / this.data.height,
@@ -150,13 +161,15 @@ export default {
     },
 
     calRotatedRectPoint() {
-      const { x, y, width, height, anchor, rotate } = this.data;
+      let { x, y, width, height, anchor, rotate } = this.data;
       const center = {
         x: x + width * anchor.x,
         y: y + height * anchor.y,
       };
 
-      return calcRotatedPoint({ x, y }, center, rotate);
+      const { x: physicsX, y: physicsY } = calcPhysicsPosition(this.data);
+
+      return calcRotatedPoint({ x: physicsX, y: physicsY }, center, rotate);
     },
 
     handleMove(e) {

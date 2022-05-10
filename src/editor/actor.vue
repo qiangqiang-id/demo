@@ -26,7 +26,6 @@ export default {
         top: data.y + mask.y + "px",
         left: data.x + mask.x + "px",
         transform: `rotate(${data.rotate}deg) scale(${data.scale.x}, ${data.scale.y})`,
-        transformOrigin: `${data.anchor.x * 100}% ${data.anchor.y * 100}%`,
       };
     },
   },

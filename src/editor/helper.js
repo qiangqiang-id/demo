@@ -91,3 +91,31 @@ export function isCollision (box1, box2) {
     isCover(box2.width / 2, deg21, AB, BC) &&
     isCover(box2.height / 2, deg22, AB, BC)
 }
+
+
+
+/**
+ * 计算矩形的物理位置，针对翻转情况
+ * @param {*} data
+ * @returns 
+ */
+export function calcPhysicsPosition (data) {
+  let { x, y, width, height, anchor, scale } = data
+
+  const center = {
+    x: x + width * anchor.x,
+    y: y + height * anchor.y
+  }
+
+  if (scale.x < 0) {
+    x = center.x - (x + width - center.x)
+  }
+
+  if (scale.y < 0) {
+    y = center.y - (y + height - center.y)
+  }
+  return {
+    x, y
+  }
+
+}
