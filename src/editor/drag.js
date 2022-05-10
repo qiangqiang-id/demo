@@ -1,18 +1,5 @@
 
-
-
-const POSITION = {
-  leftTop: "leftTop",
-  leftBottom: "leftBottom",
-  rightTop: "rightTop",
-  rightBottom: "rightBottom",
-  topCenter: "topCenter",
-  bottomCenter: "bottomCenter",
-  leftCenter: "leftCenter",
-  rightCenter: 'rightCenter',
-  rotate: "rotate",
-};
-
+import { POSITION } from './constants';
 
 
 /**
@@ -92,16 +79,18 @@ const pointInRect = (p0, p1, p2) => {
 
 export class ScaleHandler {
 
-  constructor(data, position, maskData, isLockProportions = true) {
+  constructor(data, position, maskData, option) {
     this.data = maskData
     this.position = position
-    this.isLockProportions = isLockProportions
+    this.option = option
     this.angle = data.rotate
     this.currentData = data
   }
 
 
   handlerScale (mousePosition) {
+
+    let result = {}
 
 
     const { sPoint, proportion, handlePoint } = this.getKeyVariable()
@@ -121,7 +110,7 @@ export class ScaleHandler {
         let newWidth = newBottomRightPoint.x - newTopLeftPoint.x;
         let newHeight = newBottomRightPoint.y - newTopLeftPoint.y;
 
-        if (this.isLockProportions) {
+        if (this.option.isLockProportions) {
           // proportion move 前的拖放比例
           // 修正 坐标 宽高
           if (newWidth / newHeight > proportion) {
@@ -147,17 +136,15 @@ export class ScaleHandler {
           newWidth = newBottomRightPoint.x - newTopLeftPoint.x;
           newHeight = newBottomRightPoint.y - newTopLeftPoint.y;
         }
-        if (newWidth < 20 || newHeight < 20) {
-          return { width, height, x, y };
 
-        }
 
-        return {
+        result = {
           x: newTopLeftPoint.x,
           y: newTopLeftPoint.y,
           height: newHeight,
           width: newWidth,
         }
+        break
       }
       case POSITION.rightTop: {
 
@@ -168,7 +155,7 @@ export class ScaleHandler {
         let newWidth = newTopRightPoint.x - newBottomLeftPoint.x
         let newHeight = newBottomLeftPoint.y - newTopRightPoint.y
 
-        if (this.isLockProportions) {
+        if (this.option.isLockProportions) {
           if (newWidth / newHeight > proportion) {
             newTopRightPoint.x = newTopRightPoint.x - Math.abs(newWidth - newHeight * proportion)
             newWidth = newHeight * proportion
@@ -187,15 +174,34 @@ export class ScaleHandler {
         }
 
         if (newWidth < 20 || newHeight < 20) {
-          return { width, height, x, y }
+          // return { width, height, x, y }
+          // 开始旋转后的坐标 对顶角
+          const startRotatedBottomLeft = calcRotatedPoint({ x, y: y + height }, { x: x + width / 2, y: y + height / 2 }, this.angle)
+          // 计算当前中心点位置
+          const currentCenter = calcRotatedPoint({
+            x: startRotatedBottomLeft.x + (newWidth < 20 ? 20 / 2 : newWidth / 2),
+            y: startRotatedBottomLeft.y - (newHeight < 20 ? 20 / 2 : newHeight / 2),
+          }, startRotatedBottomLeft, this.angle)
+
+          const currentPoint = calcRotatedPoint(startRotatedBottomLeft, currentCenter, -this.angle)
+
+          currentPoint.y -= newHeight < 20 ? 20 : newHeight
+
+          result = {
+            ...currentPoint,
+            width: newWidth < 20 ? 20 : newWidth,
+            height: newHeight < 20 ? 20 : newHeight,
+          }
+
         }
 
-        return {
+        result = {
           x: newBottomLeftPoint.x,
           y: newTopRightPoint.y,
           height: newHeight,
           width: newWidth
         }
+        break
       }
 
       case POSITION.leftBottom: {
@@ -207,7 +213,7 @@ export class ScaleHandler {
         let newWidth = newTopRightPoint.x - newBottomLeftPoint.x
         let newHeight = newBottomLeftPoint.y - newTopRightPoint.y
 
-        if (this.isLockProportions) {
+        if (this.option.isLockProportions) {
           if (newWidth / newHeight > proportion) {
             newBottomLeftPoint.x = newBottomLeftPoint.x + Math.abs(newWidth - newHeight * proportion)
             newWidth = newHeight * proportion
@@ -225,16 +231,14 @@ export class ScaleHandler {
           newHeight = newBottomLeftPoint.y - newTopRightPoint.y
         }
 
-        if (newWidth < 20 || (newHeight < 20)) {
-          return { width, height, x, y }
-        }
-
-        return {
+        result = {
           x: newBottomLeftPoint.x,
           y: newTopRightPoint.y,
           height: newHeight,
           width: newWidth
         }
+
+        break
       }
       case POSITION.rightBottom: {
 
@@ -245,7 +249,7 @@ export class ScaleHandler {
         let newWidth = newBottomRightPoint.x - newTopLeftPoint.x
         let newHeight = newBottomRightPoint.y - newTopLeftPoint.y
 
-        if (this.isLockProportions) {
+        if (this.option.isLockProportions) {
           if (newWidth / newHeight > proportion) {
             newBottomRightPoint.x = newBottomRightPoint.x - Math.abs(newWidth - newHeight * proportion)
             newWidth = newHeight * proportion
@@ -263,16 +267,14 @@ export class ScaleHandler {
           newHeight = newBottomRightPoint.y - newTopLeftPoint.y
         }
 
-        if (newWidth < 20 || (newHeight < 20)) {
-          return { width: 20, height: 20, x, y }
-        }
-
-        return {
+        result = {
           x: newTopLeftPoint.x,
           y: newTopLeftPoint.y,
           height: newHeight,
           width: newWidth
         }
+
+        break
       }
 
       case POSITION.bottomCenter:
@@ -302,22 +304,13 @@ export class ScaleHandler {
             (Math.abs(sPoint.y - rotatedMiddlePoint.y) / 2) * (rotatedMiddlePoint.y > sPoint.y ? -1 : 1),
         }
 
-
-        if (!pointInRect(newCenter, handlePoint, sPoint) || newHeight < 20) {
-          return {
-            width,
-            height: 20,
-            x,
-            y
-          }
-        }
-
-        return {
+        result = {
           width,
           height: newHeight,
           y: newCenter.y - newHeight / 2,
           x: newCenter.x - width / 2,
         }
+        break
 
       }
 
@@ -340,25 +333,23 @@ export class ScaleHandler {
           y: rotatedMiddlePoint.y + (Math.abs(sPoint.y - rotatedMiddlePoint.y) / 2) * (rotatedMiddlePoint.y > sPoint.y ? -1 : 1)
         }
 
-        if (!pointInRect(newCenter, handlePoint, sPoint) || newWidth < 20) {
-          return { width, height, x, y }
-        }
-
-        return {
+        result = {
           height,
           width: newWidth,
           y: newCenter.y - height / 2,
           x: newCenter.x - newWidth / 2
         }
+        break
       }
 
     }
+
+    result = this.checkBoundary(result, handlePoint, sPoint)
+    return result
   }
 
 
   getKeyVariable () {
-
-
 
     const { x, y, width, height } = this.data
     const center = {
@@ -377,7 +368,7 @@ export class ScaleHandler {
       center, // 元素原始中心点坐标
       handlePoint, // 当前拖动手柄的虚拟坐标（旋转后的坐标）
       sPoint, // 拖动手柄的对称点的坐标（假设拖动的是左上角手柄，那么他的对称点就是右下角的点）
-      proportion: this.isLockProportions ? width / height : 1, // 宽高比
+      proportion: this.option.isLockProportions ? width / height : 1, // 宽高比
     }
   }
 
@@ -484,6 +475,134 @@ export class ScaleHandler {
           this.angle
         );
     }
+  }
+  // 检查边界值
+  checkBoundary (result, handlePoint, sPoint) {
+    let data = result
+    const { maxHeight = Infinity, maxWidth = Infinity, minWidth = 20, minHeight = 20 } = this.option
+
+    const { width, height, x, y } = result
+
+    const newCenter = {
+      x: x + width / 2,
+      y: y + height / 2
+    }
+
+    if (!pointInRect(newCenter, handlePoint, sPoint) || maxHeight < height || maxWidth < width || minWidth > width || minHeight > height) {
+
+      let h = maxHeight < height ? maxHeight : minHeight > height ? minHeight : height
+      let w = maxWidth < width ? maxWidth : minWidth > width ? minWidth : width
+
+      const yCenterPointList = [POSITION.topCenter, POSITION.bottomCenter]
+      const xCenterPointList = [POSITION.leftCenter, POSITION.rightCenter]
+      if (!pointInRect(newCenter, handlePoint, sPoint) && yCenterPointList.includes(this.position)) {
+        h = minHeight
+      }
+
+      if (!pointInRect(newCenter, handlePoint, sPoint) && xCenterPointList.includes(this.position)) {
+        w = minWidth
+      }
+
+      const { x: startX, y: startY, width: startW, height: startH } = this.data
+
+      const startCenter = {
+        x: startX + startW / 2,
+        y: startY + startH / 2,
+      }
+
+      switch (this.position) {
+        case POSITION.leftTop: {
+          const startRightBottomForRotated = calcRotatedPoint({
+            x: startX + startW,
+            y: startY + startH
+          }, startCenter, this.angle)
+
+          const currentCenter = calcRotatedPoint({
+            x: startRightBottomForRotated.x - w / 2,
+            y: startRightBottomForRotated.y - h / 2
+          }, startRightBottomForRotated, this.angle)
+
+          const currentRigthBottom = calcRotatedPoint(startRightBottomForRotated, currentCenter, -this.angle)
+          currentRigthBottom.x -= w
+          currentRigthBottom.y -= h
+
+          data = {
+            ...currentRigthBottom,
+            width: w,
+            height: h
+          }
+
+          break
+        }
+
+        case POSITION.rightBottom: {
+          const startTopLeftForRotated = calcRotatedPoint({ x: startX, y: startY }, startCenter, this.angle)
+
+          const currentCenter = calcRotatedPoint({
+            x: startTopLeftForRotated.x + w / 2,
+            y: startTopLeftForRotated.y + h / 2
+          }, startTopLeftForRotated, this.angle)
+
+          const currentTopLeft = calcRotatedPoint(startTopLeftForRotated, currentCenter, -this.angle)
+          data = {
+            ...currentTopLeft,
+            width: w,
+            height: h
+          }
+
+          break
+        }
+
+        case POSITION.rightCenter:
+        case POSITION.topCenter:
+        case POSITION.rightTop: {
+          const startLeftBottomForRoated = calcRotatedPoint({ x: startX, y: startY + startH }, startCenter, this.angle)
+
+          const currentCenter = calcRotatedPoint({
+            x: startLeftBottomForRoated.x + w / 2,
+            y: startLeftBottomForRoated.y - h / 2
+          }, startLeftBottomForRoated, this.angle)
+
+          const currentLeftBottom = calcRotatedPoint(startLeftBottomForRoated, currentCenter, -this.angle)
+
+          currentLeftBottom.y -= h
+          data = {
+            ...currentLeftBottom,
+            width: w,
+            height: h
+          }
+          break
+        }
+
+        case POSITION.leftCenter:
+        case POSITION.bottomCenter:
+        case POSITION.leftBottom: {
+          const startRightTopForRotate = calcRotatedPoint({
+            x: startX + startW,
+            y: startY
+          }, startCenter, this.angle)
+
+          const currentCenter = calcRotatedPoint({
+            x: startRightTopForRotate.x - w / 2,
+            y: startRightTopForRotate.y + h / 2
+          }, startRightTopForRotate, this.angle)
+
+          const currentRigthTop = calcRotatedPoint(startRightTopForRotate, currentCenter, -this.angle)
+
+          currentRigthTop.x -= w
+          data = {
+            ...currentRigthTop,
+            width: w,
+            height: h
+          }
+
+          break
+        }
+      }
+
+    }
+    return data
+
   }
 
 }
