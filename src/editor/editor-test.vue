@@ -11,18 +11,29 @@
 
     <el-button @click.stop="handleClip">裁剪</el-button>
 
-    <div id="editor-area">
+    <div id="editor-area" @mousedown="clearSelected">
       <Actor
         v-show="!isClip"
         :id="`${item.id}`"
         class="actor"
-        v-for="(item, index) in actorList"
+        v-for="item in actorList"
         :key="item.id"
         :data="item"
-        @mousedown.native="handleMove(index, $event)"
+        @mousedown.native.stop="handleMousedown(item.id, $event)"
       />
     </div>
-    <ActorDress v-show="!isClip" @update="updateHandler" :data="selectedData" />
+    <ActorDress
+      v-if="!isClip && selectedIds.length === 1"
+      @update="updateHandler"
+      :data="selectedData"
+    />
+
+    <ActorsDress
+      v-if="isMultiple"
+      :actors="selectedData"
+      @dragMove="dragMove"
+      @upload="multipleUpload"
+    />
 
     <canvas v-show="!isClip" id="my-canvas"></canvas>
 
@@ -40,34 +51,9 @@
 import * as PIXI from "pixi.js";
 import Actor from "./actor.vue";
 import ActorDress from "./ActorDress";
+import ActorsDress from "./ActorsDress";
 import Clipping from "./Clipping.vue";
-const actorList = [
-  {
-    id: 2,
-    x: 0,
-    y: 0,
-    width: 400,
-    height: 267,
-    originWidth: 400,
-    originHeight: 267,
-    rotate: 0,
-    url: "https://st0.dancf.com/gaoding-material/0/images/223463/20191107-203726-aUYH9.jpg",
-    scale: {
-      x: 1,
-      y: 1,
-    },
-    anchor: {
-      x: 0.5,
-      y: 0.5,
-    },
-    mask: {
-      x: 0,
-      y: 0,
-      width: 400,
-      height: 267,
-    },
-  },
-];
+import { ACTOR_LIST } from "./constants.js";
 
 export default {
   naem: "EditorTest",
@@ -76,34 +62,54 @@ export default {
     ActorDress,
     Actor,
     Clipping,
+    ActorsDress,
   },
 
   data() {
     return {
-      actorList,
-      selectedIndex: 0,
-      c1: null, // 容器
-      s1: null, // 图片
+      actorList: ACTOR_LIST,
+      selectedIds: [1, 2],
+      c: null, // 容器
+      s: null, // 图片
       m1: null, // 蒙层
       m: null, // 站位图形，保证容器和图片一样大
+      layers: [],
       isClip: false,
     };
   },
 
   computed: {
     selectedData() {
-      return this.actorList[this.selectedIndex];
+      if (this.isMultiple) {
+        return this.selectedIds.map((id) => {
+          return this.actorList.find((item) => item.id === id);
+        });
+      }
+      let index = this.getIndexById(this.selectedIds[0]);
+      return this.actorList[index];
     },
 
-    actorStyle() {
-      return {};
+    isMultiple() {
+      return this.selectedIds.length > 1;
     },
   },
 
   watch: {
-    "actorList.0": {
+    actorList: {
       handler(data) {
-        data && this.setData(data);
+        if (!data) return;
+        if (this.isMultiple) {
+          data.forEach((item, index) => {
+            const layer = this.layers[index];
+            this.setData(item, layer);
+          });
+          return;
+        }
+        const index = data.findIndex(({ id }) => this.selectedIds[0] === id);
+        if (index > -1) {
+          const layer = this.layers[index];
+          this.setData(data[index], layer);
+        }
       },
       deep: true,
     },
@@ -114,16 +120,46 @@ export default {
   },
 
   methods: {
-    handleMove(index) {
-      this.selectedIndex = index;
+    multipleUpload(data){
+      data.forEach((item)=>{
+        const index = this.actorList.findIndex(({id})=>id === item.id)
+        if(index > -1) {
+          Object.assign(this.actorList[index],item)
+        }
+      })
+    },
+     
+    clearSelected() {
+      this.selectedIds = [];
+    },
+
+    handleMousedown(id, event) {
+      if (event.shiftKey) {
+        const isSelected = this.selectedIds.some((item) => item === id);
+        !isSelected && this.selectedIds.push(id);
+      } else {
+        this.selectedIds = [id];
+      }
+
+      this.dragMove();
+    },
+
+    dragMove() {
       document.addEventListener("mousemove", this.handleMousemove);
       document.addEventListener("mouseup", this.handleMouseup);
     },
 
     handleMousemove(e) {
-      const data = this.actorList[this.selectedIndex];
-      data.x += e.movementX;
-      data.y += e.movementY;
+      this.selectedIds.forEach((item) => {
+        const index = this.getIndexById(item);
+        const data = this.actorList[index];
+        data.x += e.movementX;
+        data.y += e.movementY;
+      });
+    },
+
+    getIndexById(id) {
+      return this.actorList.findIndex((item) => item.id === id);
     },
 
     handleMouseup() {
@@ -132,7 +168,8 @@ export default {
     },
 
     handleReverse(type) {
-      const data = this.actorList[this.selectedIndex];
+      const index = this.getIndexById(this.selectedIds[0]);
+      const data = this.actorList[index];
       if (type === "horizontal") {
         data.scale.x = data.scale.x > 0 ? -1 : 1;
       } else {
@@ -141,14 +178,14 @@ export default {
     },
 
     updateHandler(newValue, maskValue) {
-      const data = this.actorList[this.selectedIndex];
+      const index = this.getIndexById(this.selectedIds[0]);
+      const data = this.actorList[index];
       Object.assign(data, newValue);
       maskValue && Object.assign(data.mask, maskValue);
     },
 
     runPixi() {
       const container = document.querySelector("#my-canvas");
-
       this.app = new PIXI.Application({
         width: 800,
         height: 800,
@@ -158,61 +195,73 @@ export default {
         preserveDrawingBuffer: true,
         view: container,
       });
-      const data = this.actorList[this.selectedIndex];
+      const urlList = [];
+      this.actorList.forEach((actor) => {
+        urlList.push(actor.url);
+      });
+      this.app.loader.add(urlList).load((loader, resources) => {
+        Object.keys(resources).forEach((key, index) => {
+          const texture = resources[key].texture;
+          const c = new PIXI.Container();
+          const s = new PIXI.Sprite(texture);
 
-      this.app.loader.add("bunny", data.url).load((loader, resources) => {
-        this.c1 = new PIXI.Container();
-        this.s1 = new PIXI.Sprite(resources.bunny.texture);
+          const data = this.actorList[index];
+          const m = new PIXI.Graphics();
+          m.beginFill(0xff0000);
+          m.drawRect(0, 0, data.width, data.height);
+          m.endFill();
+          m.alpha = 0;
 
-        this.m = new PIXI.Graphics();
-        this.m.beginFill(0xff0000);
-        this.m.drawRect(0, 0, data.width, data.height);
-        this.m.endFill();
-        this.m.alpha = 0;
+          const m1 = new PIXI.Graphics();
+          m1.beginFill(0xff002123);
+          m1.drawRect(
+            data.mask.x,
+            data.mask.y,
+            data.mask.width,
+            data.mask.height
+          );
+          m1.endFill();
 
-        this.m1 = new PIXI.Graphics();
-        this.m1.beginFill(0xff002123);
-        this.m1.drawRect(
-          data.mask.x,
-          data.mask.y,
-          data.mask.width,
-          data.mask.height
-        );
-        this.m1.endFill();
-
-        this.c1.addChild(this.s1);
-        this.c1.addChild(this.m1);
-        this.c1.addChild(this.m);
-        this.s1.mask = this.m1;
-
-        this.setData(data);
-        this.app.stage.addChild(this.c1);
+          c.addChild(s);
+          c.addChild(m1);
+          c.addChild(m);
+          s.mask = m1;
+          const layer = {
+            c,
+            s,
+            m,
+            m1,
+          };
+          this.setData(data, layer);
+          this.app.stage.addChild(c);
+          this.layers.push(layer);
+        });
       });
     },
 
-    setData(data) {
+    setData(data, layer) {
       let { rotate, mask, width, height, x, y, scale } = data;
+      let { c, s, m1, m } = layer;
 
       // 容器设置
       const pivotX = mask.x + mask.width / 2;
       const pivotY = mask.y + mask.height / 2;
       const c1X = x + pivotX;
       const c1Y = y + pivotY;
-      this.c1.angle = rotate;
-      this.c1.pivot.set(pivotX, pivotY);
-      this.c1.position.set(c1X, c1Y);
-      this.c1.scale.set(scale.x, scale.y);
+      c.angle = rotate;
+      c.pivot.set(pivotX, pivotY);
+      c.position.set(c1X, c1Y);
+      c.scale.set(scale.x, scale.y);
 
-      this.m.width = width;
-      this.m.height = height;
+      m.width = width;
+      m.height = height;
 
-      this.s1.width = width;
-      this.s1.height = height;
-
+      s.width = width;
+      s.height = height;
       // 设置mask
-      this.m1.width = mask.width;
-      this.m1.height = mask.height;
-      this.m1.position.set(mask.x, mask.y);
+      m1.width = mask.width;
+      m1.height = mask.height;
+      m1.position.set(mask.x, mask.y);
     },
 
     handleClip() {
@@ -221,10 +270,6 @@ export default {
 
     closeClip() {
       this.isClip = false;
-      this.$nextTick(() => {
-        // this.runPixi();
-        // this.setData();
-      });
     },
   },
 };

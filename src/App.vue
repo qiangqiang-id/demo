@@ -1,18 +1,13 @@
 <template>
   <div id="app">
     <router-view></router-view>
-    <HelloWorld />
   </div>
 </template>
 
 <script >
 import dayjs from "dayjs";
-import HelloWorld from "./components/HelloWorld.vue";
 export default {
   name: "App",
-  components: {
-    HelloWorld,
-  },
   data() {
     return {
       message: "Welcome to Your Vue.js App",

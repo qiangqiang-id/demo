@@ -29,7 +29,7 @@ export const POSITION = {
   rotate: "rotate",
 };
 
-export const pointList = [
+export const POINT_LIST = [
   {
     type: POSITION.leftTop,
     cursorType: 0,
@@ -73,3 +73,74 @@ export const pointList = [
 ];
 
 
+export const ACTOR_LIST = [
+  {
+    id: 1,
+    x: 100,
+    y: 100,
+    width: 168,
+    height: 112,
+    rotate: 0,
+    url: "https://st0.dancf.com/gaoding-material/0/images/223463/20191107-203726-aUYH9.jpg",
+    scale: {
+      x: 1,
+      y: 1,
+    },
+    anchor: {
+      x: 0.5,
+      y: 0.5,
+    },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 168,
+      height: 112,
+    },
+  },
+  {
+    id: 2,
+    x: 200,
+    y: 200,
+    width: 168,
+    height: 112,
+    rotate: 0,
+    url: "https://st0.dancf.com/gaoding-material/0/images/354048/20200108-213111-jqakQ.jpg",
+    scale: {
+      x: 1,
+      y: 1,
+    },
+    anchor: {
+      x: 0.5,
+      y: 0.5,
+    },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 168,
+      height: 112,
+    },
+  },
+  {
+    id: 3,
+    x: 300,
+    y: 300,
+    width: 168,
+    height: 112,
+    rotate: 0,
+    url: "https://st0.dancf.com/gaoding-material/0/images/232980/20191108-002232-MrAfZ.jpg",
+    scale: {
+      x: 1,
+      y: 1,
+    },
+    anchor: {
+      x: 0.5,
+      y: 0.5,
+    },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 168,
+      height: 112,
+    },
+  },
+];

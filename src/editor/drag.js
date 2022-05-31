@@ -79,12 +79,11 @@ const pointInRect = (p0, p1, p2) => {
 
 export class ScaleHandler {
 
-  constructor(data, position, maskData, option) {
+  constructor(rotate, position, maskData, option) {
     this.data = maskData
     this.position = position
     this.option = option
-    this.angle = data.rotate
-    this.currentData = data
+    this.angle = rotate
   }
 
 
@@ -498,7 +497,6 @@ export class ScaleHandler {
       if (!pointInRect(newCenter, handlePoint, sPoint) && yCenterPointList.includes(this.position)) {
         h = minHeight
       }
-
       if (!pointInRect(newCenter, handlePoint, sPoint) && xCenterPointList.includes(this.position)) {
         w = minWidth
       }
@@ -531,7 +529,6 @@ export class ScaleHandler {
             width: w,
             height: h
           }
-
           break
         }
 
@@ -549,7 +546,6 @@ export class ScaleHandler {
             width: w,
             height: h
           }
-
           break
         }
 
@@ -599,10 +595,8 @@ export class ScaleHandler {
           break
         }
       }
-
     }
     return data
-
   }
 
 }
@@ -622,5 +616,5 @@ export class RotateHandler {
       Math.atan2(mousePosition.y - centerY, mousePosition.x - centerX) / (Math.PI / 180);
     // 获取旋转的角度值， startRotate 为初始角度值
     return rotateDegreeAfter - rotateDegreeBefore + startRotate;
-  } a
+  } 
 }

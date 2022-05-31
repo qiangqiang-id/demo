@@ -107,7 +107,7 @@ export class MasKScale {
     this.startRectData = { ...rectData }
     this.startMaskData = { ...maskData }
     this.type = type
-    this.scaleHandler = new ScaleHandler(this.startRectData, type, this.startMaskData, this.getScaleOption())
+    this.scaleHandler = new ScaleHandler(this.startRectData.rotate, type, this.startMaskData, this.getScaleOption())
 
   }
 

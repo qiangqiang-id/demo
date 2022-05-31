@@ -20,7 +20,7 @@
 
 <script>
 import { dragAction } from "./drag";
-import { pointList, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
+import { POINT_LIST, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 import { MasKScale } from "./manualCilping";
 export default {
   props: {
@@ -35,7 +35,7 @@ export default {
 
   data() {
     return {
-      pointList,
+      pointList: POINT_LIST,
     };
   },
 

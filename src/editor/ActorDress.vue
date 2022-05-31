@@ -38,9 +38,8 @@
 <script>
 import { dragAction, RotateHandler } from "./drag";
 import { MaskScale } from "./maskScale";
-import ManualClip from "./manualCilping";
 
-import { pointList, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
+import { POINT_LIST, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 
 export default {
   props: {
@@ -56,9 +55,8 @@ export default {
 
   data() {
     return {
-      pointList,
+      pointList: POINT_LIST,
       type: undefined,
-      POSITION,
       editorAreaInfo: null,
       startImageData: {
         x: 0,
@@ -84,9 +82,7 @@ export default {
 
   methods: {
     dragScale(type, event) {
-      const maskScale = this.isAutoClip
-        ? new MaskScale(this.data, type, this.isAutoClip)
-        : new ManualClip(this.data, type, this.isAutoClip);
+      const maskScale = new MaskScale(this.data, type, this.isAutoClip);
 
       dragAction(event, {
         init: () => {

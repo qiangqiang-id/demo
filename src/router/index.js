@@ -2,8 +2,6 @@ import Vue from 'vue'
 
 import VueRouter from 'vue-router';
 
-import HelloWorld from '../components/HelloWorld.vue';
-
 Vue.use(VueRouter)
 
 let router = new VueRouter({
@@ -23,11 +21,6 @@ let router = new VueRouter({
       path: '/gifs',
       name: 'gifs',
       component: () => import('../components/gifs.vue')
-    },
-    {
-      path: '/helloWorld',
-      name: 'helloWorld',
-      component: HelloWorld
     },
     {
       path: '/gif2',
@@ -55,29 +48,15 @@ let router = new VueRouter({
       component: () => import('../components/demo.vue')
     },
     {
-      path: '/progress',
-      name: 'progress',
-      component: () => import('../components/progress.vue')
-    },
-    {
-      path: '/scroll',
-      name: 'scroll',
-      component: () => import('../components/scroll.vue'),
-    },
-    {
       path: '/',
       name: 'editorTest',
       component: () => import('../editor/editor-test.vue')
     },
     {
-      path: '/pixi',
-      name: 'pixi',
-      component: () => import('../components/pixi.vue')
-    },
-    {
-      path: '/testScaleX',
-      name: 'testScaleX',
-      component: () => import('../components/testScaleX.vue')
+      path: '/request',
+      name: 'request',
+      component: () => import('../components/request.vue')
+      //  component: () => import('../editor/editor-test.vue')
     }
   ]
 })

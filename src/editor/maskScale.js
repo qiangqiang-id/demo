@@ -8,7 +8,7 @@ export class MaskScale {
     this.startData = { ...containerStartData, }
     this.maskData = { ...containerStartData.mask }
     this.positionType = type
-    this.scaleHandler = new ScaleHandler(containerStartData, type, this.getMaskInEditerAreaPosition(), { isLockProportions: true })
+    this.scaleHandler = new ScaleHandler(containerStartData.rotate, type, this.getMaskInEditerAreaPosition(), { isLockProportions: true })
     this.rectPosition = this.init(containerStartData)
     this.isAutoClip = isAutoClip
   }
@@ -59,6 +59,7 @@ export class MaskScale {
       x: rateX,
       y: rateY
     }
+
 
 
     return {
