@@ -44,6 +44,23 @@ export const calcRotatedPoint = (prev, center, angle) => {
   }
 }
 
+
+/**
+ * 判断当前的拉动点是否是中心点
+ * @param position
+ * @return   boolean
+ */
+ const isCenterPoint = (position) => {
+  const centerPonitList = [
+    POSITION.topCenter,
+    POSITION.leftCenter,
+    POSITION.rightCenter,
+    POSITION.bottomCenter,
+  ];
+  return centerPonitList.includes(position);
+};
+
+
 /**
  * 检测 p0 是否在 p1 与 p2 建立的矩形内
  * @param  {Object}  p0 被检测的坐标
@@ -90,8 +107,6 @@ export class ScaleHandler {
   handlerScale (mousePosition) {
 
     let result = {}
-
-
     const { sPoint, proportion, handlePoint } = this.getKeyVariable()
     const { x, y, width, height } = this.data
 
@@ -489,17 +504,11 @@ export class ScaleHandler {
 
     if (!pointInRect(newCenter, handlePoint, sPoint) || maxHeight < height || maxWidth < width || minWidth > width || minHeight > height) {
 
-      let h = maxHeight < height ? maxHeight : minHeight > height ? minHeight : height
-      let w = maxWidth < width ? maxWidth : minWidth > width ? minWidth : width
-
-      const yCenterPointList = [POSITION.topCenter, POSITION.bottomCenter]
-      const xCenterPointList = [POSITION.leftCenter, POSITION.rightCenter]
-      if (!pointInRect(newCenter, handlePoint, sPoint) && yCenterPointList.includes(this.position)) {
-        h = minHeight
-      }
-      if (!pointInRect(newCenter, handlePoint, sPoint) && xCenterPointList.includes(this.position)) {
-        w = minWidth
-      }
+      const { currentWidth:w, currentHeight:h } = this.getWidthAndHeightInBoundar(
+        data,
+        handlePoint,
+        sPoint
+      );
 
       const { x: startX, y: startY, width: startW, height: startH } = this.data
 
@@ -597,6 +606,56 @@ export class ScaleHandler {
       }
     }
     return data
+  }
+
+  getWidthAndHeightInBoundar(result, handlePoint, sPoint){
+    const {
+      maxHeight = Infinity,
+      maxWidth = Infinity,
+      minWidth = 20,
+      minHeight = 20,
+    } = this.option;
+    const {x, y, width, height} = result
+    // 限制的宽高，非等比例缩放
+    let currentHeight = maxHeight < height ? maxHeight : minHeight > height ? minHeight : height;
+    let currentWidth = maxWidth < width ? maxWidth : minWidth > width ? minWidth : width;
+
+    const newCenter = {
+      x: x + width / 2,
+      y: y + height / 2,
+    };
+    // 拉伸中心点
+    const yAxis = [POSITION.topCenter, POSITION.bottomCenter];
+    const xAxis = [POSITION.leftCenter, POSITION.rightCenter];
+    if (isCenterPoint(this.position) && !pointInRect(newCenter, handlePoint, sPoint)) {
+      if (yAxis.includes(this.position)) {
+        currentHeight = minHeight;
+      }
+      if (xAxis.includes(this.position)) {
+        currentWidth = minWidth;
+      }
+    }
+    // 等比例缩放
+    if (
+      !isCenterPoint(this.position) &&
+      this.option.isLockProportions &&
+      (minHeight > height || minWidth > width)
+    ) {
+      const rateW = minWidth / this.data.width;
+      const rateH = minHeight / this.data.height;
+      const maxRate = Math.max(rateH, rateW);
+      if (maxRate === rateW) {
+        currentWidth = minWidth;
+        currentHeight = this.data.height * maxRate;
+      } else {
+        currentHeight = minHeight;
+        currentWidth = this.data.width * maxRate;
+      }
+    }
+    return {
+      currentWidth,
+      currentHeight,
+    };
   }
 
 }

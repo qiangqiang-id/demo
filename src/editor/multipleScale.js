@@ -1,5 +1,6 @@
 import { deepCopy } from './helper'
 import {ScaleHandler } from './drag'
+import { POSITION } from './constants';
 
 export default class MultipleScale {
 
@@ -8,54 +9,91 @@ export default class MultipleScale {
     this.type = type
     this.selectedList = deepCopy(selectedList)
     this.scaleHandler = new ScaleHandler(rotate, type, this.startRectData, {
-        minWidth: 100,
-        minHeight: 100,
+        minWidth: 50,
+        minHeight: 50,
         isLockProportions: true,
       });
   }
 
   handlerScale(mousePosition) { 
     const newRectData = this.scaleHandler.handlerScale(mousePosition)
+    // 拉伸比例
     const rateW = newRectData.width / this.startRectData.width 
-    const rateH =newRectData.height / this.startRectData.height 
+    const rateH = newRectData.height / this.startRectData.height 
     const  result = []
     this.selectedList.forEach((item) => {
-      const { x: startX, y: startY, mask: startMask, width:startW,height:startH,id} = item
-      
+      const { x: startX, y: startY, mask: startMask, width: startW, height: startH, id } = item
+      // mask以画布为基准的位置
       const xMaskStratInCanvas = startX + startMask.x
       const yMaskStratInCanvas = startY + startMask.y
-      // 计算元素在多选框的开始距离
-      const xMaskStartInRect = xMaskStratInCanvas - this.startRectData.x 
-      const yMaskStartInRect = yMaskStratInCanvas - this.startRectData.y
-     
-     
-      // 原图 信息
+    
+      // 原图大小
       const width = startW * rateW;
       const height = startH * rateH;
-      const x = this.startRectData.x  + startX - (startX - xMaskStartInRect * rateW)
-      const y = this.startRectData.y + startY - (startY - yMaskStartInRect * rateH)
+       // mask 大小
+      const maskW = startMask.width * rateW
+      const maskH = startMask.height * rateH
+      // mask 在 原图的定位的增长距离
+      const diffMaskX = startMask.x * rateW - startMask.x;
+      const diffMaskY = startMask.y * rateH - startMask.y;
+   
+      let rectX = 0
+      let rectY = 0
 
-       // 计算mask 信息，坐标是以画布为基础
-       const maskW =  startMask.width * rateW
-       const maskH = startMask.height * rateH
-
-      // console.log(`%c${x},%c${y},%c${xMaskInCanvas},%c${yMaskInCanvas}`,'color:red','color:green','color:orange','color:blue')
-
+      switch (this.type) {
+        case POSITION.rightBottom: {
+          // 拉伸增长基数
+          const xMaskStartInRect = xMaskStratInCanvas - this.startRectData.x
+          const yMaskStartInRect = yMaskStratInCanvas - this.startRectData.y
+          // mask 在画布中的位置
+          rectX = this.startRectData.x + xMaskStartInRect * rateW
+          rectY = this.startRectData.y + yMaskStartInRect * rateH
+          break;
+        }
+          
+        case POSITION.rightTop: { 
+          // 拉伸增长基数
+          const xMaskStartInRect = xMaskStratInCanvas - this.startRectData.x
+          const yMaskStartInRect = yMaskStratInCanvas - (this.startRectData.y + this.startRectData.height) 
+          rectX = this.startRectData.x + xMaskStartInRect * rateW
+          rectY = this.startRectData.y + yMaskStartInRect * rateH + this.startRectData.height 
+          break;
+        }
+          
+        case POSITION.leftBottom: { 
+          // 拉伸增长基数
+          const xMaskStartInRect = xMaskStratInCanvas - (this.startRectData.x +  this.startRectData.width)
+          const yMaskStartInRect = yMaskStratInCanvas - this.startRectData.y 
+          rectX = this.startRectData.x + xMaskStartInRect * rateW + this.startRectData.width 
+          rectY = this.startRectData.y + yMaskStartInRect * rateH
+          break;
+        }
+          
+        case POSITION.leftTop: { 
+           // 拉伸增长基数
+          const xMaskStartInRect = xMaskStratInCanvas - (this.startRectData.x +  this.startRectData.width)
+          const yMaskStartInRect = yMaskStratInCanvas - (this.startRectData.y + this.startRectData.height)
+          rectX = this.startRectData.x + xMaskStartInRect * rateW + this.startRectData.width 
+          rectY = this.startRectData.y + yMaskStartInRect * rateH + this.startRectData.height 
+          break;
+        }
+      }
       result.push({
         id,
         width,
         height,
-        x,
-        y,
+        x: rectX - startMask.x - diffMaskX,
+        y: rectY - startMask.y - diffMaskY,
         mask: {
-          width:maskW,
-          height:maskH,
-          x:startMask.x,
-          y:startMask.y
+          width: maskW,
+          height: maskH,
+          x: startMask.x + diffMaskX,
+          y: startMask.y + diffMaskY
         }
       })
     });
-
-    return result
+    return result;
   }
  }
+
+ // console.log(`%c${x},%c${y},%c${xMaskInCanvas},%c${yMaskInCanvas}`,'color:red','color:green','color:orange','color:blue') 
