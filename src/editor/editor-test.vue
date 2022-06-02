@@ -68,7 +68,7 @@ export default {
   data() {
     return {
       actorList: ACTOR_LIST,
-      selectedIds: [1, 2],
+      selectedIds: [],
       c: null, // 容器
       s: null, // 图片
       m1: null, // 蒙层
@@ -120,15 +120,15 @@ export default {
   },
 
   methods: {
-    multipleUpload(data){
-      data.forEach((item)=>{
-        const index = this.actorList.findIndex(({id})=>id === item.id)
-        if(index > -1) {
-          Object.assign(this.actorList[index],item)
+    multipleUpload(data) {
+      data.forEach((item) => {
+        const index = this.actorList.findIndex(({ id }) => id === item.id);
+        if (index > -1) {
+          Object.assign(this.actorList[index], item);
         }
-      })
+      });
     },
-     
+
     clearSelected() {
       this.selectedIds = [];
     },
@@ -137,6 +137,7 @@ export default {
       if (event.shiftKey) {
         const isSelected = this.selectedIds.some((item) => item === id);
         !isSelected && this.selectedIds.push(id);
+        return;
       } else {
         this.selectedIds = [id];
       }

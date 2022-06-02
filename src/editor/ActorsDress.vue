@@ -3,7 +3,7 @@
     <div
       class="actor-item"
       v-for="item in actors"
-      @mousedown="$emit('dragMove', $event)"
+      @mousedown="dragMove"
       :key="item.id"
       :style="{
         left: item.x + item.mask.x + 'px',
@@ -15,7 +15,7 @@
     ></div>
     <div
       class="dress-box"
-      @mousedown="$emit('dragMove', $event)"
+      @mousedown="dragMove"
       @click.self="handlerClick"
       :style="dressBoxStyle"
     >
@@ -27,8 +27,8 @@
         @mousedown.stop="dragScale(item.type, $event)"
         :style="{
           position: 'absolute',
-          top: getData.height * item.position.y + 'px',
-          left: getData.width * item.position.x + 'px',
+          top: rectData.height * item.position.y + 'px',
+          left: rectData.width * item.position.x + 'px',
           transform: `translate(-50%,-50%)`,
           cursor: cursorStyle[item.cursorType],
         }"
@@ -38,8 +38,8 @@
         class="rotateArea"
         :style="{
           position: 'absolute',
-          left: getData.width / 2 + 'px',
-          top: getData.height + 10 + 'px',
+          left: rectData.width / 2 + 'px',
+          top: rectData.height + 10 + 'px',
           transform: `translateX(-50%)`,
         }"
         @mousedown.stop="dragRotate"
@@ -53,8 +53,10 @@
 
 <script>
 import { POINT_LIST, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
-import { calcRotatedPoint, dragAction } from "./drag";
+import { calcRotatedPoint, dragAction, RotateHandler } from "./drag";
 import MultipleScale from "./multipleScale";
+import MultipleRotate from "./multipleRotate";
+
 export default {
   props: {
     actors: {
@@ -66,7 +68,27 @@ export default {
   data() {
     return {
       rotate: 0,
+      rectData: {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+      },
+      rectCenter: {
+        x: 0,
+        y: 0,
+      },
     };
+  },
+
+  mounted() {
+    this.rectData = this.caleRectData();
+  },
+
+  watch: {
+    actors() {
+      this.rectData = this.caleRectData();
+    },
   },
 
   computed: {
@@ -81,22 +103,130 @@ export default {
     },
 
     dressBoxStyle() {
-      const { x, y, width, height } = this.getData;
+      const { x, y, width, height } = this.rectData;
       return {
         position: "absolute",
         left: x + "px",
         top: y + "px",
         width: width + "px",
         height: height + "px",
+        transform: `rotate(${this.rotate}deg)`,
       };
     },
 
-    getData() {
+    cursorStyle() {
+      let angle = this.rotate;
+      const cursors = [];
+      if (angle < 0) {
+        angle += 360;
+      }
+
+      INIT_ANGLE.forEach((a) => {
+        const newAngle = (a + angle) % 360;
+        const item = ANGLE_CURSOR.find(
+          (i) => i.start <= newAngle && i.end >= newAngle
+        );
+        item && cursors.push(item.cursor);
+      });
+      return cursors;
+    },
+  },
+
+  methods: {
+    dragRotate(e) {
+      const editorAreaInfo = document
+        .getElementById("editor-area")
+        .getBoundingClientRect();
+
+      const { x, y, width, height } = this.rectData;
+
+      const initData = {
+        startRotate: this.rotate, // 开始角度
+        startX: e.clientX - editorAreaInfo.x, // 鼠标按下去坐标
+        startY: e.clientY - editorAreaInfo.y,
+        centerX: x + width / 2, // 旋转元素中心点的坐标
+        centerY: y + height / 2,
+      };
+
+      const rotateHandler = new RotateHandler(initData);
+      const multipleRotate = new MultipleRotate(
+        this.actors,
+        this.rectData,
+        this.rotate
+      );
+
+      dragAction(e, {
+        init: () => {
+          this.isRotate = true;
+        },
+
+        move: (e) => {
+          this.rotate = rotateHandler.rotateHandler({
+            x: e.clientX - editorAreaInfo.x,
+            y: e.clientY - editorAreaInfo.y,
+          });
+          const data = multipleRotate.handleRotate(this.rotate);
+          this.$emit("upload", data);
+        },
+
+        end: () => {
+          this.isRotate = false;
+        },
+      });
+    },
+
+    dragScale(type, e) {
+      const editorAreaInfo = document
+        .getElementById("editor-area")
+        .getBoundingClientRect();
+
+      const multipleScale = new MultipleScale(
+        this.rectData,
+        type,
+        this.actors,
+        this.rotate
+      );
+      dragAction(e, {
+        init: () => {},
+        move: (e) => {
+          const { list, data } = multipleScale.handlerScale({
+            x: e.clientX - editorAreaInfo.x,
+            y: e.clientY - editorAreaInfo.y,
+          });
+          this.rectData = data;
+          this.$emit("upload", list);
+        },
+        end: () => {},
+      });
+    },
+
+    handlerClick() {
+      console.log("handlerClick");
+    },
+
+    dragMove(e) {
+      this.$emit("dragMove", e);
+      document.addEventListener("mousemove", this.handleMousemove);
+      document.addEventListener("mouseup", this.handleMouseup);
+    },
+
+    handleMousemove(e) {
+      this.rectData.x += e.movementX;
+      this.rectData.y += e.movementY;
+    },
+
+    handleMouseup() {
+      document.removeEventListener("mousemove", this.handleMousemove);
+      document.removeEventListener("mouseup", this.handleMouseup);
+    },
+
+    caleRectData() {
       const topList = [];
       const leftList = [];
       const rightList = [];
       const bottomList = [];
-      this.actors.forEach(({ x, y, rotate, mask }) => {
+      this.actors.forEach((item) => {
+        const { x, y, mask, rotate } = item;
         const topLeft = {
           x: x + mask.x,
           y: y + mask.y,
@@ -121,15 +251,35 @@ export default {
           x: topLeft.x + mask.width / 2,
           y: topLeft.y + mask.height / 2,
         };
+        // 物理位置
+        let rotatedTopLeft = calcRotatedPoint(topLeft, center, rotate);
+        let rotatedRigthBottom = calcRotatedPoint(rightBottom, center, rotate);
+        let rotateTopRight = calcRotatedPoint(topRight, center, rotate);
+        let rotateLeftBottom = calcRotatedPoint(leftBottom, center, rotate);
 
-        const rotatedTopLeft = calcRotatedPoint(topLeft, center, rotate);
-        const rotatedRigthBottom = calcRotatedPoint(
-          rightBottom,
-          center,
-          rotate
-        );
-        const rotateTopRight = calcRotatedPoint(topRight, center, rotate);
-        const rotateLeftBottom = calcRotatedPoint(leftBottom, center, rotate);
+        // 以多选框的中心的回正
+        if (this.rotate !== 0) {
+          rotatedTopLeft = calcRotatedPoint(
+            rotatedTopLeft,
+            this.rectCenter,
+            -this.rotate
+          );
+          rotatedRigthBottom = calcRotatedPoint(
+            rotatedRigthBottom,
+            this.rectCenter,
+            -this.rotate
+          );
+          rotateTopRight = calcRotatedPoint(
+            rotateTopRight,
+            this.rectCenter,
+            -this.rotate
+          );
+          rotateLeftBottom = calcRotatedPoint(
+            rotateLeftBottom,
+            this.rectCenter,
+            -this.rotate
+          );
+        }
 
         const xAixs = [
           rotatedTopLeft.x,
@@ -151,67 +301,49 @@ export default {
         rightList.push(Math.max(...xAixs));
       });
 
-      const x = Math.min(...leftList);
-      const y = Math.min(...topList);
-      const width = Math.max(...rightList) - x;
-      const height = Math.max(...bottomList) - y;
+      let topLeft = {
+        x: Math.min(...leftList),
+        y: Math.min(...topList),
+      };
+
+      let rightBottom = {
+        x: Math.max(...rightList),
+        y: Math.max(...bottomList),
+      };
+
+      const width = rightBottom.x - topLeft.x;
+      const height = rightBottom.y - topLeft.y;
+
+      // 改变中心点
+      if (this.rotate !== 0) {
+        // 这里是久的中心点，记录物理位置
+        topLeft = calcRotatedPoint(topLeft, this.rectCenter, this.rotate);
+
+        rightBottom = calcRotatedPoint(
+          rightBottom,
+          this.rectCenter,
+          this.rotate
+        );
+      }
+
+      // 中的中心点
+      this.rectCenter = {
+        x: (topLeft.x + rightBottom.x) / 2,
+        y: (topLeft.y + rightBottom.y) / 2,
+      };
+
+      // 以新的中心点回正
+      const newTopLeft = calcRotatedPoint(
+        topLeft,
+        this.rectCenter,
+        -this.rotate
+      );
+
       return {
-        x,
-        y,
+        ...newTopLeft,
         width,
         height,
       };
-    },
-
-    cursorStyle() {
-      let angle = this.rotate;
-      const cursors = [];
-      if (angle < 0) {
-        angle += 360;
-      }
-
-      INIT_ANGLE.forEach((a) => {
-        const newAngle = (a + angle) % 360;
-        const item = ANGLE_CURSOR.find(
-          (i) => i.start <= newAngle && i.end >= newAngle
-        );
-        item && cursors.push(item.cursor);
-      });
-      return cursors;
-    },
-  },
-
-  methods: {
-    dragRotate() {
-      console.log("旋转");
-    },
-
-    dragScale(type, e) {
-      const editorAreaInfo = document
-        .getElementById("editor-area")
-        .getBoundingClientRect();
-
-      const multipleScale = new MultipleScale(
-        this.getData,
-        type,
-        this.actors,
-        this.rotate
-      );
-      dragAction(e, {
-        init: () => {},
-        move: (e) => {
-          const data = multipleScale.handlerScale({
-            x: e.clientX - editorAreaInfo.x,
-            y: e.clientY - editorAreaInfo.y,
-          });
-          this.$emit('upload',data)
-        },
-        end: () => {},
-      });
-    },
-
-    handlerClick() {
-      console.log("handlerClick");
     },
   },
 };

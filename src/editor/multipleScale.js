@@ -92,8 +92,9 @@ export default class MultipleScale {
         }
       })
     });
-    return result;
+    return {
+      list: result,
+      data:newRectData
+    }
   }
  }
-
- // console.log(`%c${x},%c${y},%c${xMaskInCanvas},%c${yMaskInCanvas}`,'color:red','color:green','color:orange','color:blue') 
