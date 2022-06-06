@@ -12,33 +12,33 @@ export default class MultipleScale {
     const result = []
 
     this.selectedList.forEach((item) => {
-      const { x, y, mask, rotate, id } = item;
+      const { x, y, width, height, rotate, id, anchor} = item;
 
       const startTopLeft = {
-        x: x + mask.x,
-        y: y + mask.y,
+        x: x,
+        y: y,
       }
       
       const startCenter = {
-        x: startTopLeft.x + mask.width / 2,
-        y: startTopLeft.y + mask.height / 2,
+        x: startTopLeft.x + width * anchor.x,
+        y: startTopLeft.y + height * anchor.y,
       }
 
       const rectCenter = {
         x: this.rectData.x + this.rectData.width / 2,
         y: this.rectData.y + this.rectData.height / 2,
       }
-      const diffRotate = (currentRotate - this.rectStartRotate)
+      const diffRotate = currentRotate - this.rectStartRotate
+
       const newRotate = rotate + diffRotate
 
-      // 开始的物理位置
-      const startTopLeftP = calcRotatedPoint(startTopLeft, startCenter, rotate)
-      // 旋转中的物理位置
-      const currentTopLeftP = calcRotatedPoint(startTopLeftP, rectCenter, diffRotate)
-      // 旋转的中的中心点物理位置
-      const currentCentert = calcRotatedPoint(startCenter, rectCenter, diffRotate)
-      // 旋转的中回正位置 
-      const currentTopLeft = calcRotatedPoint(currentTopLeftP, currentCentert, -newRotate)
+      const newCenter = calcRotatedPoint(startCenter, rectCenter, diffRotate)
+      
+      const currentTopLeft = {
+        x: newCenter.x - width * anchor.x,
+        y: newCenter.y - height * anchor.y
+      }
+
       result.push({
         id,
         rotate: newRotate,
@@ -49,3 +49,7 @@ export default class MultipleScale {
     return result
   }
 }
+
+/**
+ * 实现思路：将元素的中心点，通过多选框的中心点进行角度偏移，计算出新的中心点，再计算左上角
+ */
