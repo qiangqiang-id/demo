@@ -53,7 +53,8 @@
 
 <script>
 import { POINT_LIST, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
-import { calcRotatedPoint, dragAction, RotateHandler } from "./drag";
+import { dragAction, RotateHandler } from "./drag";
+import { calcRotatedPoint } from "./helper";
 import MultipleScale from "./multipleScale";
 import MultipleRotate from "./multipleRotate";
 

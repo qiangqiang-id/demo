@@ -1,5 +1,6 @@
 
 import { POSITION } from './constants';
+import { calcRotatedPoint, pointInRect, isCenterPoint } from './helper'
 
 
 /**
@@ -28,71 +29,6 @@ const getMiddlePoint = (prev, now) => {
     y: prev.y + ((now.y - prev.y) / 2)
   }
 }
-
-/**
- * 计算出圆心旋转后点的坐标
- * @param prev 旋转前的点坐标
- * @param center 旋转中心
- * @param angle 旋转的角度
- * @return 旋转后的坐标
- */
-export const calcRotatedPoint = (prev, center, angle) => {
-  angle /= 180 / Math.PI
-  return {
-    x: (prev.x - center.x) * Math.cos(angle) - (prev.y - center.y) * Math.sin(angle) + center.x,
-    y: (prev.x - center.x) * Math.sin(angle) + (prev.y - center.y) * Math.cos(angle) + center.y
-  }
-}
-
-
-/**
- * 判断当前的拉动点是否是中心点
- * @param position
- * @return   boolean
- */
- const isCenterPoint = (position) => {
-  const centerPonitList = [
-    POSITION.topCenter,
-    POSITION.leftCenter,
-    POSITION.rightCenter,
-    POSITION.bottomCenter,
-  ];
-  return centerPonitList.includes(position);
-};
-
-
-/**
- * 检测 p0 是否在 p1 与 p2 建立的矩形内
- * @param  {Object}  p0 被检测的坐标
- * @param  {Object}  p1 点1坐标
- * @param  {Object}  p2 点2坐标
- * @return {Boolean}    检测结果
- */
-const pointInRect = (p0, p1, p2) => {
-  if (p1.x > p2.x) {
-    if (p0.x < p2.x) {
-      return false
-    }
-  } else {
-    if (p0.x > p2.x) {
-      return false
-    }
-  }
-
-  if (p1.y > p2.y) {
-    if (p0.y < p2.y) {
-      return false
-    }
-  } else {
-    if (p0.y > p2.y) {
-      return false
-    }
-  }
-
-  return true
-}
-
-
 
 export class ScaleHandler {
 
@@ -501,6 +437,7 @@ export class ScaleHandler {
       x: x + width / 2,
       y: y + height / 2
     }
+
 
     if (!pointInRect(newCenter, handlePoint, sPoint) || maxHeight < height || maxWidth < width || minWidth > width || minHeight > height) {
 

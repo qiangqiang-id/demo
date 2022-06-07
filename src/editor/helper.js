@@ -1,3 +1,5 @@
+import { POSITION } from './constants'
+
 // 绕原点逆时针旋转后的点坐标
 // 默认绕原点旋转
 const rotate = ({ x, y }, deg, origin = { x: 0, y: 0 }) => ({
@@ -6,10 +8,9 @@ const rotate = ({ x, y }, deg, origin = { x: 0, y: 0 }) => ({
 })
 const toDeg = (angle) => angle / 180 * Math.PI
 const getCenterPoint = (box) => ({
-  x: box.left + box.width / 2,
-  y: box.top + box.height / 2
+  x: box.x + box.width / 2,
+  y: box.y + box.height / 2
 })
-
 
 
 /**
@@ -20,21 +21,19 @@ function toRect (box) {
   let deg = toDeg(box.angle)
   let cp = getCenterPoint(box)
   return [rotate({
-    x: box.left,
-    y: box.top
+    x: box.x,
+    y: box.y
   }, deg, cp), rotate({
-    x: box.left + box.width,
-    y: box.top,
+    x: box.x + box.width,
+    y: box.y,
   }, deg, cp), rotate({
-    x: box.left + box.width,
-    y: box.top + box.height,
+    x: box.x + box.width,
+    y: box.y + box.height,
   }, deg, cp), rotate({
-    x: box.left,
-    y: box.top + box.height
+    x: box.x,
+    y: box.y + box.height
   }, deg, cp)]
 }
-
-
 
 /**
  * 计算投影半径
@@ -44,8 +43,6 @@ function toRect (box) {
 function getProjectionRadius (checkAxis, axis) {
   return Math.abs(axis[0] * checkAxis[0] + axis[1] * checkAxis[1])
 }
-
-
 
 /**
  * 判断是否碰撞
@@ -78,6 +75,7 @@ export function isCollision (box1, box2) {
   // 矩形2 的两个弧度
   let deg21 = toDeg(box2.angle)
   let deg22 = toDeg(90 - box2.angle)
+  console.log(deg21,deg22)
   // 投影重叠
   const isCover = (checkAxisRadius, deg, targetAxis1, targetAxis2) => {
     let checkAxis = [Math.cos(deg), Math.sin(deg)]
@@ -93,6 +91,25 @@ export function isCollision (box1, box2) {
 }
 
 
+/**
+ * 封装drag事件
+ **/
+export const dragAction = (oldEvent, executors) => {
+  let cache = {}
+  cache = executors.init(oldEvent)
+  const startMove = (newEvent) => {
+    cache = executors.move(newEvent, cache) || cache
+  }
+
+  const endMove = () => {
+    executors.end()
+    document.removeEventListener('mousemove', startMove)
+    document.removeEventListener('mouseup', endMove)
+  }
+
+  document.addEventListener('mousemove', startMove)
+  document.addEventListener('mouseup', endMove)
+}
 
 /**
  * 计算矩形的物理位置，针对翻转情况
@@ -120,7 +137,6 @@ export function calcPhysicsPosition (data) {
 
 }
 
-
 /**  深拷贝对象 */
 export function deepCopy(target) {
   if (typeof target === 'object') {
@@ -136,3 +152,66 @@ export function deepCopy(target) {
   }
   return target;
 }
+
+
+/**
+ * 检测 p0 是否在 p1 与 p2 建立的矩形内
+ * @param  {Object}  p0 被检测的坐标
+ * @param  {Object}  p1 点1坐标
+ * @param  {Object}  p2 点2坐标
+ * @return {Boolean}    检测结果
+ */
+export const pointInRect = (p0, p1, p2) => {
+  if (p1.x > p2.x) {
+    if (p0.x < p2.x) {
+      return false
+    }
+  } else {
+    if (p0.x > p2.x) {
+      return false
+    }
+  }
+
+  if (p1.y > p2.y) {
+    if (p0.y < p2.y) {
+      return false
+    }
+  } else {
+    if (p0.y > p2.y) {
+      return false
+    }
+  }
+
+  return true
+}
+
+
+/**
+ * 计算出圆心旋转后点的坐标
+ * @param prev 旋转前的点坐标
+ * @param center 旋转中心
+ * @param angle 旋转的角度
+ * @return 旋转后的坐标
+ */
+export const calcRotatedPoint = (prev, center, angle) => {
+  angle /= 180 / Math.PI
+  return {
+    x: (prev.x - center.x) * Math.cos(angle) - (prev.y - center.y) * Math.sin(angle) + center.x,
+    y: (prev.x - center.x) * Math.sin(angle) + (prev.y - center.y) * Math.cos(angle) + center.y
+  }
+}
+
+/**
+ * 判断当前的拉动点是否是中心点
+ * @param position
+ * @return   boolean
+ */
+ export const isCenterPoint = (position) => {
+  const centerPonitList = [
+    POSITION.topCenter,
+    POSITION.leftCenter,
+    POSITION.rightCenter,
+    POSITION.bottomCenter,
+  ];
+  return centerPonitList.includes(position);
+};

@@ -33,9 +33,9 @@
 
 <script>
 import ClipDress from "./ClipDress.vue";
-import { dragAction, calcRotatedPoint } from "./drag";
+import { dragAction } from "./drag";
 import { MaskMove } from "./manualCilping";
-import { calcPhysicsPosition } from "./helper";
+import { calcPhysicsPosition, calcRotatedPoint } from "./helper";
 export default {
   components: {
     ClipDress,

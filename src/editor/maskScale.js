@@ -1,6 +1,7 @@
 
-import { ScaleHandler, calcRotatedPoint } from './drag'
+import { ScaleHandler } from './drag'
 import { POSITION } from './constants';
+import { calcRotatedPoint } from './helper'
 
 export class MaskScale {
   constructor(containerStartData, type, isAutoClip = true) {
@@ -59,8 +60,6 @@ export class MaskScale {
       x: rateX,
       y: rateY
     }
-
-
 
     return {
       maskData,
