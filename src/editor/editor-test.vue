@@ -204,11 +204,11 @@ export default {
       );
 
       this.actorList.forEach((actor) => {
-        const { x, y, width, height, rotate, id } = actor;
+        const { x, y, width, height, mask, rotate, id, anchor } = actor;
         const rect2 = new OBB(
-          new Vector2d(x + width / 2, y + height / 2),
-          width,
-          height,
+          new Vector2d(x + width * anchor.x, y + height * anchor.y),
+          mask.width,
+          mask.height,
           (rotate * Math.PI) / 180
         );
         const isCollsion = isCollision(rect1, rect2);

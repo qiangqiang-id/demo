@@ -15,8 +15,6 @@ Vector2d.prototype = {
     return this.x * v.x + this.y * v.y
   },
 }
-
-
 export class OBB {
   constructor(centerPoint, width, height, rotation) {
     this.centerPoint = centerPoint

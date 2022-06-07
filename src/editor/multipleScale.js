@@ -14,32 +14,7 @@ export default class MultipleScale {
         isLockProportions: true,
     });
     this.rotate = rotate
-    this.startTopLeftPhysics = this.getStartTopLeftPhysics()
-
-    this.startRightBottomPhyscs = this.getStartRightBottomPhyscs()
     
-  }
-
-  getStartTopLeftPhysics () { 
-    const { x, y, width, height } = this.startRectData
-    const center = {
-      x: x + width / 2,
-      y: y + height / 2
-    }
-    return calcRotatedPoint({ x, y }, center, this.rotate)
-  }
-
-  getStartRightBottomPhyscs () { 
-    const { x, y, width, height } = this.startRectData
-    const center = {
-      x: x + width / 2,
-      y: y + height / 2
-    }
-    const point = {
-      x: x + width,
-      y: y + height,
-    }
-    return calcRotatedPoint(point, center, this.rotate)
   }
 
   handlerScale(mousePosition) { 
