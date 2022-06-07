@@ -215,3 +215,5 @@ export const calcRotatedPoint = (prev, center, angle) => {
   ];
   return centerPonitList.includes(position);
 };
+
+

@@ -55,7 +55,7 @@ import ActorDress from "./ActorDress";
 import ActorsDress from "./ActorsDress";
 import Clipping from "./Clipping.vue";
 import { ACTOR_LIST } from "./constants.js";
-import { isCollision } from "./helper";
+import { OBB, isCollision, Vector2d } from "./obb";
 
 export default {
   naem: "EditorTest",
@@ -194,49 +194,55 @@ export default {
     },
 
     checkSelect() {
-      // console.log(
-      //   pointInRect({ x: 100, y: 100 }, selectionRightBottom, selectionLeftTop)
-      // );
+      const { x, y, width, height } = this.selectionBoxRect;
 
-      // console.log(selectionLeftTop, selectionRightBottom);
+      const rect1 = new OBB(
+        new Vector2d(x + width / 2, y + height / 2),
+        width,
+        height,
+        0
+      );
 
       this.actorList.forEach((actor) => {
-        const { x, y, mask, rotate } = actor;
-        const leftTop = { x: x + mask.x, y: y + mask.y };
-        // const leftBottom = { x: leftTop.x, y: leftTop.y + mask.height };
-        // const rightTop = { x: leftTop.x + mask.width, y: leftTop.y };
-        // const rightBottom = {
-        //   x: leftTop.x + mask.width,
-        //   y: leftTop.y + mask.height,
-        // };
-
-        // const center = {
-        //   x: leftTop.x + mask.width / 2,
-        //   y: leftTop.y + mask.height / 2,
-        // };
-
-        // const pointList = [leftTop, leftBottom, rightTop, rightBottom];
-        // // console.log(pointList);
-
-        // const isIntersection = pointList.some((point) => {
-        //   const physicsPoint = calcRotatedPoint(point, center, rotate);
-        //   return this.isPointInSelectBox(physicsPoint);
-        // });
-
-        const box = {
-          x: leftTop.x + mask.width,
-          y: leftTop.y + mask.height,
-          width: mask.width,
-          height: mask.height,
-          angle: rotate,
-        };
-
-        const isss = isCollision(box, this.selectionBoxRect);
-
-        console.log(isss);
-
-        isss && this.selectedIds.push(actor.id);
+        const { x, y, width, height, rotate, id } = actor;
+        const rect2 = new OBB(
+          new Vector2d(x + width / 2, y + height / 2),
+          width,
+          height,
+          (rotate * Math.PI) / 180
+        );
+        const isCollsion = isCollision(rect1, rect2);
+        isCollsion && this.selectedIds.push(id);
       });
+    },
+
+    detectorOBBvsOBB(rect1, rect2) {
+      const nv = rect1.centerPoint.sub(rect2.centerPoint);
+      const axisA1 = rect1.axes[0];
+      if (
+        rect1.getProjectionRadius(axisA1) + rect2.getProjectionRadius(axisA1) <=
+        Math.abs(nv.dot(axisA1))
+      )
+        return false;
+      const axisA2 = rect1.axes[1];
+      if (
+        rect1.getProjectionRadius(axisA2) + rect2.getProjectionRadius(axisA2) <=
+        Math.abs(nv.dot(axisA2))
+      )
+        return false;
+      const axisB1 = rect2.axes[0];
+      if (
+        rect1.getProjectionRadius(axisB1) + rect2.getProjectionRadius(axisB1) <=
+        Math.abs(nv.dot(axisB1))
+      )
+        return false;
+      const axisB2 = rect2.axes[1];
+      if (
+        rect1.getProjectionRadius(axisB2) + rect2.getProjectionRadius(axisB2) <=
+        Math.abs(nv.dot(axisB2))
+      )
+        return false;
+      return true;
     },
 
     isPointInSelectBox(point) {
