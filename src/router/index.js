@@ -50,14 +50,8 @@ let router = new VueRouter({
     {
       path: '/',
       name: 'editorTest',
-      component: () => import('../editor/editor-test.vue')
+      component: () => import('../editor/index.vue')
     },
-    {
-      path: '/request',
-      name: 'request',
-      component: () => import('../components/request.vue')
-      //  component: () => import('../editor/editor-test.vue')
-    }
   ]
 })
 

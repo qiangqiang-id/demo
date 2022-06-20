@@ -46,18 +46,21 @@ export function isCollision (rect1, rect2) {
     Math.abs(nv.dot(axisA1))
   )
     return false
+  
   var axisA2 = rect1.axes[1]
   if (
     rect1.getProjectionRadius(axisA2) + rect2.getProjectionRadius(axisA2) <=
     Math.abs(nv.dot(axisA2))
   )
     return false
+    
   var axisB1 = rect2.axes[0]
   if (
     rect1.getProjectionRadius(axisB1) + rect2.getProjectionRadius(axisB1) <=
     Math.abs(nv.dot(axisB1))
   )
     return false
+  
   var axisB2 = rect2.axes[1]
   if (
     rect1.getProjectionRadius(axisB2) + rect2.getProjectionRadius(axisB2) <=

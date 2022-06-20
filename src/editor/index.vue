@@ -36,7 +36,7 @@
       @upload="multipleUpload"
     />
 
-    <canvas v-show="!isClip" id="my-canvas"></canvas>
+    <canvas id="my-canvas"></canvas>
 
     <Clipping
       v-if="isClip"
@@ -216,55 +216,6 @@ export default {
       });
     },
 
-    detectorOBBvsOBB(rect1, rect2) {
-      const nv = rect1.centerPoint.sub(rect2.centerPoint);
-      const axisA1 = rect1.axes[0];
-      if (
-        rect1.getProjectionRadius(axisA1) + rect2.getProjectionRadius(axisA1) <=
-        Math.abs(nv.dot(axisA1))
-      )
-        return false;
-      const axisA2 = rect1.axes[1];
-      if (
-        rect1.getProjectionRadius(axisA2) + rect2.getProjectionRadius(axisA2) <=
-        Math.abs(nv.dot(axisA2))
-      )
-        return false;
-      const axisB1 = rect2.axes[0];
-      if (
-        rect1.getProjectionRadius(axisB1) + rect2.getProjectionRadius(axisB1) <=
-        Math.abs(nv.dot(axisB1))
-      )
-        return false;
-      const axisB2 = rect2.axes[1];
-      if (
-        rect1.getProjectionRadius(axisB2) + rect2.getProjectionRadius(axisB2) <=
-        Math.abs(nv.dot(axisB2))
-      )
-        return false;
-      return true;
-    },
-
-    isPointInSelectBox(point) {
-      const { x, y, width, height } = this.selectionBoxRect;
-      const selectionLeftTop = {
-        x: x,
-        y: y,
-      };
-
-      const selectionRightBottom = {
-        x: x + width,
-        y: y + height,
-      };
-
-      return (
-        point.x >= selectionLeftTop.x &&
-        point.x <= selectionRightBottom.x &&
-        point.y >= selectionLeftTop.y &&
-        point.y <= selectionRightBottom.y
-      );
-    },
-
     handleMousedown(id, event) {
       if (event.shiftKey) {
         const isSelected = this.selectedIds.some((item) => item === id);
@@ -357,12 +308,7 @@ export default {
           c.addChild(m1);
           c.addChild(m);
           s.mask = m1;
-          const layer = {
-            c,
-            s,
-            m,
-            m1,
-          };
+          const layer = { c, s, m, m1 };
           this.setData(data, layer);
           this.app.stage.addChild(c);
           this.layers.push(layer);
