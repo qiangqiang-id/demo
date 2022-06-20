@@ -3,26 +3,6 @@ import { POSITION } from './constants';
 import { calcRotatedPoint, pointInRect, isCenterPoint } from './helper'
 
 
-/**
- * 封装drag事件
- **/
-export const dragAction = (oldEvent, executors) => {
-  let cache = {}
-  cache = executors.init(oldEvent)
-  const startMove = (newEvent) => {
-    cache = executors.move(newEvent, cache) || cache
-  }
-
-  const endMove = () => {
-    executors.end()
-    document.removeEventListener('mousemove', startMove)
-    document.removeEventListener('mouseup', endMove)
-  }
-
-  document.addEventListener('mousemove', startMove)
-  document.addEventListener('mouseup', endMove)
-}
-
 const getMiddlePoint = (prev, now) => {
   return {
     x: prev.x + ((now.x - prev.x) / 2),

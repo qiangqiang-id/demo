@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { dragAction } from "./drag";
+import { dragAction } from "./helper";
 import { POINT_LIST, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 import { MasKScale } from "./manualCilping";
 export default {
