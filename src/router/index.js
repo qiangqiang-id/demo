@@ -50,7 +50,7 @@ let router = new VueRouter({
     {
       path: '/',
       name: 'editorTest',
-      component: () => import('../editor/index.vue')
+      component: () => import('../page/editor/index.vue')
     },
   ]
 })

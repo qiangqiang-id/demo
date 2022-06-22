@@ -27,7 +27,7 @@
           }"
           @mousedown.stop="dragRotate"
         >
-          <img src="../assets/icon_rotate.png" alt="rotateIcon" />
+          <img src="@/assets/icon_rotate.png" alt="rotateIcon" />
         </div>
       </div>
     </div>
