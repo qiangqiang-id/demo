@@ -33,7 +33,7 @@
 
 <script>
 import ClipDress from "./ClipDress.vue";
-import { MaskMove } from "./Operate";
+import { ClipMove } from "./Operate";
 import {
   calcPhysicsPosition,
   calcRotatedPoint,
@@ -176,11 +176,11 @@ export default {
     },
 
     handleMove(e) {
-      const maskMove = new MaskMove(this.data, this.maskData, e);
+      const clipMove = new ClipMove(this.data, this.maskData, e);
       dragAction(e, {
         init: () => {},
         move: (e) => {
-          const data = maskMove.handlerMove(e);
+          const data = clipMove.handlerMove(e);
           Object.assign(this.maskData, data);
         },
         end: () => {},

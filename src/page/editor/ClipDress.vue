@@ -21,7 +21,7 @@
 <script>
 import { dragAction } from "./Operate/helper";
 import { POINT_LIST, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
-import { MasKScale } from "./Operate";
+import { ClipScale } from "./Operate";
 export default {
   props: {
     data: {
@@ -72,7 +72,7 @@ export default {
 
   methods: {
     dragScale(type, event) {
-      const maskScale = new MasKScale(this.data, this.maskData, type);
+      const clipScale = new ClipScale(this.data, this.maskData, type);
 
       const editorAreaInfo = document
         .getElementById("editor-area")
@@ -80,7 +80,7 @@ export default {
 
       dragAction(event, {
         move: (e) => {
-          const data = maskScale.handlerScale({
+          const data = clipScale.handlerScale({
             x: e.clientX - editorAreaInfo.x,
             y: e.clientY - editorAreaInfo.y,
           });

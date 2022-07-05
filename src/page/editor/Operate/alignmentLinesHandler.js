@@ -1,5 +1,6 @@
 import { uniqAlignLines, deepCopy, getRectRotatedRange } from './helper'
 
+// 画布大小
 const CANVAS_WIDTH = 800
 const CANVAS_HEIGHT = 800
 
@@ -33,7 +34,6 @@ export default class AlignmentLinesHandler {
           x: xRange[0],
           y: yRange[0]
         }
-
 
         const rightBottom = {
           x: xRange[1],
