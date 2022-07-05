@@ -1,8 +1,8 @@
 // import PSD from 'psd'
 // eslint-disable-next-line no-undef
-importScripts('psd.js','UPNG.js','pako.js');
+importScripts('UPNG.js', 'pako.js', 'psd.js');
 const PSD = require('psd');
-// import PSD from 'psd'
+
 
 // 二进制转base64
 const _arrayBufferToBase64 = buffer => {
@@ -17,40 +17,25 @@ const _arrayBufferToBase64 = buffer => {
 
 
 const toBase64 = (image) => {
-  return  'data:image/png;base64,'+ _arrayBufferToBase64(UPNG.encode(
-            [image.pixelArrayBuffer.buffer],
-            image.width(),
-            image.height(),
-            0,
-          ),
-          )
+  // eslint-disable-next-line no-undef
+  return 'data:image/png;base64,' + _arrayBufferToBase64(UPNG.encode(
+    [image.pixelArrayBuffer.buffer],
+    image.width(),
+    image.height(),
+    0,
+  ),
+  )
 }
 
-self.addEventListener('message', function (e) {
-  const {result} = e.data
-  const psd = PSD.fromBuffer(result); // 解析二进制数据
+self.addEventListener('message', async function (e) {
 
-  console.log(psd)
+  const psd = PSD.fromBuffer(e.data.result); // 解析二进制数据
+   const { children, document: doc } = psd.tree().export();
 
-
-  const layer = psd.layers[1]
+  console.log(children,doc,psd)
 
 
-
-
-  
-
-  //  eslint-disable-next-line no-undef
-  // const back = 'data:image/png;base64,'+ _arrayBufferToBase64(UPNG.encode(
-  //           [image.pixelArrayBuffer.buffer],
-  //           image.width(),
-  //           image.height(),
-  //           0,
-  //         ),
-  // )
-
-  // console.log(back)  
-
+  // const layer = psd.layers[1]
 
 
   // const  storke = layer.vectorStroke()
@@ -73,12 +58,12 @@ self.addEventListener('message', function (e) {
   // const r = Math.round(ClrB["Rd  "])
   // const g = Math.round(ClrB["Grn "])
   // const b = Math.round(ClrB["Bl  "])
-  
+
 
   // const maskBackground = `rgb(${r},${g},${b})`
 
   // console.log(storkeColor,Clr,storkeWidth,r,g,b)
-  
+
   // const data ={
   //   storkeColor,
   //   storkeWidth,
@@ -88,35 +73,11 @@ self.addEventListener('message', function (e) {
 
   // }
 
-  const origin = layer.vectorOrigination()
-  const mask = layer.vectorMask()
-  const solidColor = layer.solidColor()
+  // const origin = layer.vectorOrigination()
+  // const mask = layer.vectorMask()
+  // const solidColor = layer.solidColor()
 
-  console.log('layer',layer,origin,mask,solidColor)
+  // console.log('layer',layer,origin,mask,solidColor)
 
-  
-  
-  
-
-
-  // self.postMessage(data)
-
-  // console.log('png',psd , layer)
-
-  // eslint-disable-next-line no-undef
-  // const preview ='data:image/png;base64,'+ _arrayBufferToBase64(UPNG.encode(
-  //           [psd.image.pixelArrayBuffer.buffer],
-  //           psd.image.width(),
-  //           psd.image.height(),
-  //           0,
-  //         ),
-          // )
-
-
-  
-
-  // console.log('preview',preview)
-
-  
- },false)
+}, false)
 

@@ -43,15 +43,15 @@ let router = new VueRouter({
       component: () => import('../components/canvasStroke.vue')
     },
     {
-      path: '/demo',
-      name: 'demo',
-      component: () => import('../components/demo.vue')
-    },
-    {
       path: '/',
       name: 'editorTest',
       component: () => import('../page/editor/index.vue')
     },
+    {
+      path: '/tabs',
+      name: 'tabs',
+      component:()=>import('../page/tabs/index.vue')
+    }
   ]
 })
 

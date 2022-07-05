@@ -85,7 +85,7 @@ export default {
         angle: 0,
       },
     };
-  },
+  },  
 
   computed: {
     selectedData() {

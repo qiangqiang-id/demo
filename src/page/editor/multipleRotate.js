@@ -1,5 +1,4 @@
-import { deepCopy } from './helper'
-import { calcRotatedPoint } from './helper'
+import { deepCopy ,calcRotatedPoint} from './helper'
 
 export default class MultipleScale {
   constructor(selectedList, rectData,rectStartRotate) {
