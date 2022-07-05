@@ -46,32 +46,31 @@ export default class AlignmentLinesHandler {
           y: leftTop.y + mask.height / 2
         }
 
-
         const topLine = { value: leftTop.y, range: [leftTop.x, rightBottom.x] }
         const bottomLine = { value: rightBottom.y, range: [leftTop.x, rightBottom.x] }
         const horizontalCenterLine = { value: center.y, range: [leftTop.x, rightBottom.x] }
-
         const leftLine = { value: leftTop.x, range: [leftTop.y, rightBottom.y] }
         const rightLine = { value: rightBottom.x, range: [leftTop.y, rightBottom.y] }
         const verticalCenterLine = { value: center.x, range: [leftTop.y, rightBottom.y] }
-
         this.horizontalLines.push(topLine, bottomLine, horizontalCenterLine)
         this.verticalLines.push(leftLine, rightLine, verticalCenterLine)
 
-        // 画布可视区域的四个边界、水平中心、垂直中心
-        const edgeTopLine = { value: 0, range: [0, CANVAS_WIDTH] }
-        const edgeBottomLine = { value: CANVAS_HEIGHT, range: [0, CANVAS_WIDTH] }
-        const edgeHorizontalCenterLine = { value: CANVAS_HEIGHT / 2, range: [0, CANVAS_WIDTH] }
-        const edgeLeftLine = { value: 0, range: [0, CANVAS_HEIGHT] }
-        const edgeRightLine = { value: CANVAS_WIDTH, range: [0, CANVAS_HEIGHT] }
-        const edgeVerticalCenterLine = { value: CANVAS_WIDTH / 2, range: [0, CANVAS_HEIGHT] }
-        this.horizontalLines.push(edgeTopLine, edgeBottomLine, edgeHorizontalCenterLine)
-        this.verticalLines.push(edgeLeftLine, edgeRightLine, edgeVerticalCenterLine)
-        // 去重
-        this.horizontalLines = uniqAlignLines(this.horizontalLines)
-        this.verticalLines = uniqAlignLines(this.verticalLines)
       }
     });
+
+    // 画布可视区域的四个边界、水平中心、垂直中心
+    const edgeTopLine = { value: 0, range: [0, CANVAS_WIDTH] }
+    const edgeBottomLine = { value: CANVAS_HEIGHT, range: [0, CANVAS_WIDTH] }
+    const edgeHorizontalCenterLine = { value: CANVAS_HEIGHT / 2, range: [0, CANVAS_WIDTH] }
+    const edgeLeftLine = { value: 0, range: [0, CANVAS_HEIGHT] }
+    const edgeRightLine = { value: CANVAS_WIDTH, range: [0, CANVAS_HEIGHT] }
+    const edgeVerticalCenterLine = { value: CANVAS_WIDTH / 2, range: [0, CANVAS_HEIGHT] }
+    this.horizontalLines.push(edgeTopLine, edgeBottomLine, edgeHorizontalCenterLine)
+    this.verticalLines.push(edgeLeftLine, edgeRightLine, edgeVerticalCenterLine)
+
+    // 去重
+    this.horizontalLines = uniqAlignLines(this.horizontalLines)
+    this.verticalLines = uniqAlignLines(this.verticalLines)
 
   }
 
@@ -150,7 +149,7 @@ export default class AlignmentLinesHandler {
       targetLeft = x + moveDistance.x
     }
 
-    
+
     for (let i = 0; i < this.horizontalLines.length; i++) {
       const { value, range } = this.horizontalLines[i]
       const min = Math.min(...range, targetMinAxis.x, targetMaxAxis.x)
@@ -198,19 +197,19 @@ export default class AlignmentLinesHandler {
       }
     }
 
-    
+
     let axis = {}
     if (this.isMultiple()) {
       const { x, y } = this.multipleData
       const diffX = targetLeft - x
       const diffY = targetTop - y
-       this.selectedList.forEach((item) => {
+      this.selectedList.forEach((item) => {
         axis[item.id] = {
           x: item.x + diffX,
           y: item.y + diffY
         }
       })
-    }else {  
+    } else {
       axis[this.selectedList[0].id] = {
         x: targetLeft,
         y: targetTop
