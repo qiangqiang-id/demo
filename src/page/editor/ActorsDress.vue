@@ -54,7 +54,11 @@
 <script>
 import { POINT_LIST, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 import { RotateHandler, MultipleScale, MultipleRotate } from "./Operate";
-import { calcRotatedPoint, dragAction } from "./Operate/helper";
+import {
+  calcRotatedPoint,
+  dragAction,
+  getRectRotatedRange,
+} from "./Operate/helper";
 
 export default {
   props: {
@@ -81,12 +85,12 @@ export default {
   },
 
   mounted() {
-    this.rectData = this.caleRectData();
+    this.updateRectData();
   },
 
   watch: {
     actors() {
-      this.rectData = this.caleRectData();
+      this.updateRectData();
     },
   },
 
@@ -132,6 +136,10 @@ export default {
   },
 
   methods: {
+    updateRectData() {
+      this.rectData = this.caleRectData();
+    },
+
     dragRotate(e) {
       const editorAreaInfo = document
         .getElementById("editor-area")
@@ -218,111 +226,73 @@ export default {
     },
 
     caleRectData() {
-      const topList = [];
-      const leftList = [];
-      const rightList = [];
-      const bottomList = [];
+      const xAixsList = [];
+      const yAixsList = [];
       this.actors.forEach((item) => {
         const { x, y, mask, rotate } = item;
-        const topLeft = {
+
+        const { xRange, yRange } = getRectRotatedRange({
+          rotate,
           x: x + mask.x,
           y: y + mask.y,
-        };
+          width: mask.width,
+          height: mask.height,
+        });
 
-        const rightBottom = {
-          x: topLeft.x + mask.width,
-          y: topLeft.y + mask.height,
-        };
-
-        const topRight = {
-          x: topLeft.x + mask.width,
-          y: topLeft.y,
-        };
-
-        const leftBottom = {
-          x: topLeft.x,
-          y: topLeft.y + mask.height,
-        };
-
-        const center = {
-          x: topLeft.x + mask.width / 2,
-          y: topLeft.y + mask.height / 2,
-        };
-        // 物理位置
-        let rotatedTopLeft = calcRotatedPoint(topLeft, center, rotate);
-        let rotatedRigthBottom = calcRotatedPoint(rightBottom, center, rotate);
-        let rotateTopRight = calcRotatedPoint(topRight, center, rotate);
-        let rotateLeftBottom = calcRotatedPoint(leftBottom, center, rotate);
-
-        // 以多选框的中心的回正
+        let xAixs = xRange;
+        let yAixs = yRange;
         if (this.rotate !== 0) {
-          rotatedTopLeft = calcRotatedPoint(
-            rotatedTopLeft,
+          const center = {
+            x: x + mask.x + mask.width / 2,
+            y: y + mask.y + mask.height / 2,
+          };
+
+          const newCenter = calcRotatedPoint(
+            center,
             this.rectCenter,
             -this.rotate
           );
-          rotatedRigthBottom = calcRotatedPoint(
-            rotatedRigthBottom,
-            this.rectCenter,
-            -this.rotate
-          );
-          rotateTopRight = calcRotatedPoint(
-            rotateTopRight,
-            this.rectCenter,
-            -this.rotate
-          );
-          rotateLeftBottom = calcRotatedPoint(
-            rotateLeftBottom,
-            this.rectCenter,
-            -this.rotate
-          );
+          const { xRange, yRange } = getRectRotatedRange({
+            x: newCenter.x - mask.width / 2,
+            y: newCenter.y - mask.height / 2,
+            width: mask.width,
+            height: mask.height,
+            rotate: rotate - this.rotate,
+          });
+          xAixs = xRange;
+          yAixs = yRange;
         }
-
-        const xAixs = [
-          rotatedTopLeft.x,
-          rotatedRigthBottom.x,
-          rotateLeftBottom.x,
-          rotateTopRight.x,
-        ];
-
-        const yAixs = [
-          rotatedTopLeft.y,
-          rotateTopRight.y,
-          rotatedRigthBottom.y,
-          rotateLeftBottom.y,
-        ];
-
-        topList.push(Math.min(...yAixs));
-        bottomList.push(Math.max(...yAixs));
-        leftList.push(Math.min(...xAixs));
-        rightList.push(Math.max(...xAixs));
+        xAixsList.push(...xAixs);
+        yAixsList.push(...yAixs);
       });
 
       let topLeft = {
-        x: Math.min(...leftList),
-        y: Math.min(...topList),
+        x: Math.min(...xAixsList),
+        y: Math.min(...yAixsList),
       };
 
       let rightBottom = {
-        x: Math.max(...rightList),
-        y: Math.max(...bottomList),
+        x: Math.max(...xAixsList),
+        y: Math.max(...yAixsList),
       };
 
       const width = rightBottom.x - topLeft.x;
       const height = rightBottom.y - topLeft.y;
 
+      // 假设已选中两个元素，并且带旋转，增加第三个
+      // 首先将三个元素全部以，选中两个编辑的中心点反向旋转。
+      // 得到未旋转的状态的位置信息。
+      // 计算出矩形
       // 改变中心点
       if (this.rotate !== 0) {
-        // 这里是久的中心点，记录物理位置
+        // 这里是旧的中心点，记录物理位置
         topLeft = calcRotatedPoint(topLeft, this.rectCenter, this.rotate);
-
         rightBottom = calcRotatedPoint(
           rightBottom,
           this.rectCenter,
           this.rotate
         );
       }
-
       // 中的中心点
       this.rectCenter = {
         x: (topLeft.x + rightBottom.x) / 2,

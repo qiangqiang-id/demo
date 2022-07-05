@@ -8,9 +8,10 @@ const CANVAS_HEIGHT = 800
 const SORPTION_RANGE = 5
 
 export default class AlignmentLinesHandler {
-  constructor(elementList, selectedIds) {
+  constructor(elementList, selectedIds, multipleData) {
     this.elementList = elementList
     this.selectedList = deepCopy(this.initSelectedEle(selectedIds))
+    this.multipleData = { ...multipleData }
     this.selectedIds = selectedIds
     this.horizontalLines = [] // 横轴
     this.verticalLines = [] // 纵轴
@@ -79,39 +80,77 @@ export default class AlignmentLinesHandler {
     return this.elementList.filter((item) => selectedIds.includes(item.id))
   }
 
+  isMultiple () {
+    return this.selectedIds.length > 1
+  }
+
   calcHandler (moveDistance) {
     const _alignmentLines = []
     let isVerticalAdsorbed = false
     let isHorizontalAdsorbed = false
 
-    // todo：暂时默认第一个
-    const target = this.selectedList[0]
-    const { x, y, mask, rotate } = target
-    const { xRange, yRange } = getRectRotatedRange({
-      rotate,
-      x: x + mask.x + moveDistance.x,
-      y: y + mask.y + moveDistance.y,
-      width: mask.width,
-      height: mask.height
-    })
+    let targetMinAxis, targetMaxAxis, targetCenter, targetLeft, targetTop
 
-    const targetMinAxis = {
-      x: xRange[0],
-      y: yRange[0],
+
+    if (this.isMultiple()) {
+      const { x, y, width, height, rotate } = this.multipleData
+      const { xRange, yRange } = getRectRotatedRange({
+        rotate,
+        x: x + moveDistance.x,
+        y: y + moveDistance.y,
+        width,
+        height
+      })
+
+      targetMinAxis = {
+        x: xRange[0],
+        y: yRange[0],
+      }
+
+      targetMaxAxis = {
+        x: xRange[1],
+        y: yRange[1],
+      }
+
+      targetCenter = {
+        x: targetMinAxis.x + width / 2,
+        y: targetMinAxis.y + height / 2,
+      }
+
+      targetTop = y + moveDistance.y
+      targetLeft = x + moveDistance.x
+
+    } else {
+      const target = this.selectedList[0]
+      const { x, y, mask, rotate } = target
+      const { xRange, yRange } = getRectRotatedRange({
+        rotate,
+        x: x + mask.x + moveDistance.x,
+        y: y + mask.y + moveDistance.y,
+        width: mask.width,
+        height: mask.height
+      })
+
+      targetMinAxis = {
+        x: xRange[0],
+        y: yRange[0],
+      }
+
+      targetMaxAxis = {
+        x: xRange[1],
+        y: yRange[1],
+      }
+
+      targetCenter = {
+        x: targetMinAxis.x + mask.width / 2,
+        y: targetMinAxis.y + mask.height / 2,
+      }
+
+      targetTop = y + moveDistance.y
+      targetLeft = x + moveDistance.x
     }
-    const targetMaxAxis = {
-      x: xRange[1],
-      y: yRange[1],
-    }
 
-    const targetCenter = {
-      x: targetMinAxis.x + mask.width / 2,
-      y: targetMinAxis.y + mask.height / 2,
-    }
-
-    let targetTop = y + moveDistance.y
-    let targetLeft = x + moveDistance.x
-
+    
     for (let i = 0; i < this.horizontalLines.length; i++) {
       const { value, range } = this.horizontalLines[i]
       const min = Math.min(...range, targetMinAxis.x, targetMaxAxis.x)
@@ -159,10 +198,27 @@ export default class AlignmentLinesHandler {
       }
     }
 
+    
+    let axis = {}
+    if (this.isMultiple()) {
+      const { x, y } = this.multipleData
+      const diffX = targetLeft - x
+      const diffY = targetTop - y
+       this.selectedList.forEach((item) => {
+        axis[item.id] = {
+          x: item.x + diffX,
+          y: item.y + diffY
+        }
+      })
+    }else {  
+      axis[this.selectedList[0].id] = {
+        x: targetLeft,
+        y: targetTop
+      }
+    }
     return {
       alignmentLines: _alignmentLines,
-      targetTop,
-      targetLeft
+      axis
     }
   }
 }

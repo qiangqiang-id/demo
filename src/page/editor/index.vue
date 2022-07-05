@@ -39,6 +39,7 @@
     />
 
     <ActorsDress
+      ref="actorsDressRef"
       v-if="isMultiple"
       :actors="selectedData"
       @mousedown.native.stop="handleMousedown"
@@ -231,10 +232,15 @@ export default {
       }
 
       if (id) this.selectedIds = [id];
-
+      let multipleData = {};
+      if (this.isMultiple) {
+        multipleData = this.$refs.actorsDressRef.rectData;
+        multipleData.rotate = this.$refs.actorsDressRef.rotate;
+      }
       const alignmentLinesHandler = new AlignmentLinesHandler(
         this.actorList,
-        this.selectedIds
+        this.selectedIds,
+        multipleData
       );
 
       const startMousePosiotn = {
@@ -248,17 +254,19 @@ export default {
             x: e.clientX - startMousePosiotn.x,
             y: e.clientY - startMousePosiotn.y,
           };
-          const { alignmentLines, targetLeft, targetTop } =
+          const { alignmentLines, axis } =
             alignmentLinesHandler.calcHandler(moveDistance);
 
           this.alignmentLines = alignmentLines;
-
+          // console.log(axis);
           this.selectedIds.forEach((item) => {
             const index = this.getIndexById(item);
             const data = this.actorList[index];
-            data.x = targetLeft;
-            data.y = targetTop;
+            data.x = axis[data.id].x;
+            data.y = axis[data.id].y;
           });
+
+          if (this.isMultiple) this.$refs.actorsDressRef.updateRectData();
         },
 
         end: () => {
