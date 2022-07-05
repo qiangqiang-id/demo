@@ -19,9 +19,9 @@
 </template>
 
 <script>
-import { dragAction } from "./helper";
+import { dragAction } from "./Operate/helper";
 import { POINT_LIST, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
-import { MasKScale } from "./manualCilping";
+import { MasKScale } from "./Operate";
 export default {
   props: {
     data: {

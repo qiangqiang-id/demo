@@ -36,10 +36,8 @@
 
 
 <script>
-import { RotateHandler } from "./drag";
-import { MaskScale } from "./maskScale";
-import { dragAction } from "./helper";
-
+import { RotateHandler, MaskScale } from "./Operate";
+import { dragAction } from "./Operate/helper";
 import { POINT_LIST, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
 
 export default {

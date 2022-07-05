@@ -1,6 +1,6 @@
 import { deepCopy, calcRotatedPoint } from './helper'
-import { ScaleHandler } from './drag'
-import { POSITION } from './constants';
+import ScaleHandler  from './scale'
+import { POSITION } from '../constants';
 
 export default class MultipleScale {
 

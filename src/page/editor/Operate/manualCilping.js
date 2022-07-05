@@ -1,8 +1,8 @@
-import { ScaleHandler } from './drag'
-import { POSITION } from './constants';
+import { ScaleHandler } from './scale'
+import { POSITION } from '../constants';
 import { calcPhysicsPosition, calcRotatedPoint } from './helper'
 
-export class MaskMove {
+export default class MaskMove {
   constructor(rectData, maskData, event) {
     this.startRectData = { ...rectData }
     this.startMaskData = { ...maskData }

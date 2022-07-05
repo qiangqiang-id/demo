@@ -1,6 +1,6 @@
 import { deepCopy ,calcRotatedPoint} from './helper'
 
-export default class MultipleScale {
+export default class MultipleRotate {
   constructor(selectedList, rectData,rectStartRotate) {
     this.selectedList = deepCopy(selectedList)
     this.rectData = deepCopy(rectData)

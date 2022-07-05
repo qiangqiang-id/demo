@@ -1,4 +1,4 @@
-import { POSITION } from './constants'
+import { POSITION } from '../constants'
 
 
 /**
@@ -126,4 +126,15 @@ export const calcRotatedPoint = (prev, center, angle) => {
   return centerPonitList.includes(position);
 };
 
-
+/**
+ *  获取中心点
+ * @param {左上角坐标} prev 
+ * @param {右下角坐标} now 
+ * @returns 
+ */
+export const getMiddlePoint = (prev, now) => {
+  return {
+    x: prev.x + ((now.x - prev.x) / 2),
+    y: prev.y + ((now.y - prev.y) / 2)
+  }
+}

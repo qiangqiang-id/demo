@@ -55,7 +55,7 @@ import ActorDress from "./ActorDress";
 import ActorsDress from "./ActorsDress";
 import Clipping from "./Clipping.vue";
 import { ACTOR_LIST } from "./constants.js";
-import { OBB, isCollision, Vector2d } from "./obb";
+import { OBB, isCollision, Vector2d } from "./Operate/obb";
 
 export default {
   naem: "EditorTest",
@@ -85,7 +85,7 @@ export default {
         angle: 0,
       },
     };
-  },  
+  },
 
   computed: {
     selectedData() {

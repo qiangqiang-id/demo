@@ -1,9 +1,9 @@
 
-import { ScaleHandler } from './drag'
-import { POSITION } from './constants';
+import  ScaleHandler from './scale'
+import { POSITION } from '../constants';
 import { calcRotatedPoint } from './helper'
 
-export class MaskScale {
+export default class MaskScale {
   constructor(containerStartData, type, isAutoClip = true) {
     // 父容器的开始位置
     this.startData = { ...containerStartData, }

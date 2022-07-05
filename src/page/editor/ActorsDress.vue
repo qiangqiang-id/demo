@@ -53,10 +53,8 @@
 
 <script>
 import { POINT_LIST, POSITION, INIT_ANGLE, ANGLE_CURSOR } from "./constants";
-import { RotateHandler } from "./drag";
-import { calcRotatedPoint, dragAction } from "./helper";
-import MultipleScale from "./multipleScale";
-import MultipleRotate from "./multipleRotate";
+import { RotateHandler, MultipleScale, MultipleRotate } from "./Operate";
+import { calcRotatedPoint, dragAction } from "./Operate/helper";
 
 export default {
   props: {
