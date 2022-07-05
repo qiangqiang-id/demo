@@ -84,11 +84,6 @@ export default {
       const maskScale = new MaskScale(this.data, type, this.isAutoClip);
 
       dragAction(event, {
-        init: () => {
-          // const [data, maskData] = this.repositionAnchor();
-          // this.$emit("update", data, maskData);
-        },
-
         move: (e) => {
           const { maskData, rectData } = maskScale.handleScale(
             {
@@ -97,13 +92,7 @@ export default {
             },
             type
           );
-
           this.$emit("update", rectData, maskData);
-        },
-
-        end: () => {
-          // const [data, maskData] = this.repositionRegular();
-          // this.$emit("update", data, maskData);
         },
       });
     },

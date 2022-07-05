@@ -13,6 +13,15 @@
 
     <div id="editor-area" @mousedown="handleMoseDowe">
       <div class="selection-box" :style="selectionBoxRectStyle"></div>
+
+      <AlignmentLine
+        v-for="line in alignmentLines"
+        :key="line.type"
+        :type="line.type"
+        :axis="line.axis"
+        :length="line.length"
+      />
+
       <Actor
         v-show="!isClip"
         :id="`${item.id}`"
@@ -20,7 +29,7 @@
         v-for="item in actorList"
         :key="item.id"
         :data="item"
-        @mousedown.native.stop="handleMousedown(item.id, $event)"
+        @mousedown.native.stop="handleMousedown($event, item.id)"
       />
     </div>
     <ActorDress
@@ -32,7 +41,7 @@
     <ActorsDress
       v-if="isMultiple"
       :actors="selectedData"
-      @dragMove="dragMove"
+      @mousedown.native.stop="handleMousedown"
       @upload="multipleUpload"
     />
 
@@ -54,8 +63,11 @@ import Actor from "./actor.vue";
 import ActorDress from "./ActorDress";
 import ActorsDress from "./ActorsDress";
 import Clipping from "./Clipping.vue";
+import AlignmentLine from "./AlignmentLine.vue";
 import { ACTOR_LIST } from "./constants.js";
 import { OBB, isCollision, Vector2d } from "./Operate/obb";
+import { dragAction } from "./Operate/helper";
+import { AlignmentLinesHandler } from "./Operate";
 
 export default {
   naem: "EditorTest",
@@ -65,6 +77,7 @@ export default {
     Actor,
     Clipping,
     ActorsDress,
+    AlignmentLine,
   },
 
   data() {
@@ -84,6 +97,7 @@ export default {
         height: 0,
         angle: 0,
       },
+      alignmentLines: [],
     };
   },
 
@@ -161,41 +175,34 @@ export default {
         y: e.clientY - editorAreaInfo.y,
       };
 
-      const handleMousemove = (e) => {
-        const currentPosition = {
-          x: e.clientX - editorAreaInfo.x,
-          y: e.clientY - editorAreaInfo.y,
-        };
+      dragAction(e, {
+        move: (e) => {
+          const currentPosition = {
+            x: e.clientX - editorAreaInfo.x,
+            y: e.clientY - editorAreaInfo.y,
+          };
 
-        Object.assign(this.selectionBoxRect, {
-          x: Math.min(startPosition.x, currentPosition.x),
-          y: Math.min(startPosition.y, currentPosition.y),
-          width: Math.abs(startPosition.x - currentPosition.x),
-          height: Math.abs(startPosition.y - currentPosition.y),
-        });
-      };
-
-      const handleMouseup = () => {
-        this.checkSelect();
-
-        Object.assign(this.selectionBoxRect, {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0,
-        });
-
-        document.removeEventListener("mousemove", handleMousemove);
-        document.removeEventListener("mouseup", handleMouseup);
-      };
-
-      document.addEventListener("mousemove", handleMousemove);
-      document.addEventListener("mouseup", handleMouseup);
+          Object.assign(this.selectionBoxRect, {
+            x: Math.min(startPosition.x, currentPosition.x),
+            y: Math.min(startPosition.y, currentPosition.y),
+            width: Math.abs(startPosition.x - currentPosition.x),
+            height: Math.abs(startPosition.y - currentPosition.y),
+          });
+        },
+        end: () => {
+          this.checkSelect();
+          Object.assign(this.selectionBoxRect, {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+          });
+        },
+      });
     },
 
     checkSelect() {
       const { x, y, width, height } = this.selectionBoxRect;
-
       const rect1 = new OBB(
         new Vector2d(x + width / 2, y + height / 2),
         width,
@@ -216,37 +223,52 @@ export default {
       });
     },
 
-    handleMousedown(id, event) {
-      if (event.shiftKey) {
+    handleMousedown(event, id) {
+      if (event.shiftKey && id) {
         const isSelected = this.selectedIds.some((item) => item === id);
         !isSelected && this.selectedIds.push(id);
         return;
       }
-      this.selectedIds = [id];
-      this.dragMove();
-    },
 
-    dragMove() {
-      document.addEventListener("mousemove", this.handleMousemove);
-      document.addEventListener("mouseup", this.handleMouseup);
-    },
+      if (id) this.selectedIds = [id];
 
-    handleMousemove(e) {
-      this.selectedIds.forEach((item) => {
-        const index = this.getIndexById(item);
-        const data = this.actorList[index];
-        data.x += e.movementX;
-        data.y += e.movementY;
+      const alignmentLinesHandler = new AlignmentLinesHandler(
+        this.actorList,
+        this.selectedIds
+      );
+
+      const startMousePosiotn = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+
+      dragAction(event, {
+        move: (e) => {
+          const moveDistance = {
+            x: e.clientX - startMousePosiotn.x,
+            y: e.clientY - startMousePosiotn.y,
+          };
+          const { alignmentLines, targetLeft, targetTop } =
+            alignmentLinesHandler.calcHandler(moveDistance);
+
+          this.alignmentLines = alignmentLines;
+
+          this.selectedIds.forEach((item) => {
+            const index = this.getIndexById(item);
+            const data = this.actorList[index];
+            data.x = targetLeft;
+            data.y = targetTop;
+          });
+        },
+
+        end: () => {
+          this.alignmentLines = [];
+        },
       });
     },
 
     getIndexById(id) {
       return this.actorList.findIndex((item) => item.id === id);
-    },
-
-    handleMouseup() {
-      document.removeEventListener("mousemove", this.handleMousemove);
-      document.removeEventListener("mouseup", this.handleMouseup);
     },
 
     handleReverse(type) {

@@ -5,18 +5,18 @@ import { POSITION } from '../constants'
  * 封装drag事件
  **/
 export const dragAction = (oldEvent, executors) => {
-  let cache = {}
-  cache = executors.init(oldEvent)
+
+  executors.init && executors.init(oldEvent)
   const startMove = (newEvent) => {
-    cache = executors.move(newEvent, cache) || cache
+     executors.move && executors.move(newEvent) 
   }
 
   const endMove = () => {
-    executors.end()
+    executors.end && executors.end()
     document.removeEventListener('mousemove', startMove)
     document.removeEventListener('mouseup', endMove)
   }
-
+  
   document.addEventListener('mousemove', startMove)
   document.addEventListener('mouseup', endMove)
 }
@@ -136,5 +136,64 @@ export const getMiddlePoint = (prev, now) => {
   return {
     x: prev.x + ((now.x - prev.x) / 2),
     y: prev.y + ((now.y - prev.y) / 2)
+  }
+}
+
+
+
+/**
+ * 将一组对齐吸附线进行去重：同位置的的多条对齐吸附线仅留下一条，取该位置所有对齐吸附线的最大值和最小值为新的范围
+ * @param lines 一组对齐吸附线信息
+ */
+export const uniqAlignLines = (lines) => {
+  const uniqLines = []
+  lines.forEach(line => {
+    const index = uniqLines.findIndex(_line => _line.value === line.value)
+    if (index === -1) uniqLines.push(line)
+    else {
+      const uniqLine = uniqLines[index]
+      const rangeMin = Math.min(uniqLine.range[0], line.range[0])
+      const rangeMax = Math.max(uniqLine.range[1], line.range[1])
+      const range = [rangeMin, rangeMax]
+      const _line = { value: line.value, range }
+      uniqLines[index] = _line
+    }
+  })
+  return uniqLines
+}
+
+
+/**
+ * 计算元素在画布中的矩形范围旋转后的新位置范围
+ * @param element 元素的位置大小和旋转角度信息
+ */
+export const getRectRotatedRange = (element) => {
+  const { x, y, width, height, rotate = 0 } = element
+
+  const radius = Math.sqrt( Math.pow(width, 2) + Math.pow(height, 2) ) / 2
+  const auxiliaryAngle = Math.atan(height / width) * 180 / Math.PI
+
+  const tlbraRadian = (180 - rotate - auxiliaryAngle) * Math.PI / 180
+  const trblaRadian = (auxiliaryAngle - rotate) * Math.PI / 180
+
+  const middleLeft = x + width / 2
+  const middleTop = y + height / 2
+
+  const xAxis = [
+    middleLeft + radius * Math.cos(tlbraRadian),
+    middleLeft + radius * Math.cos(trblaRadian),
+    middleLeft - radius * Math.cos(tlbraRadian),
+    middleLeft - radius * Math.cos(trblaRadian),
+  ]
+  const yAxis = [
+    middleTop - radius * Math.sin(tlbraRadian),
+    middleTop - radius * Math.sin(trblaRadian),
+    middleTop + radius * Math.sin(tlbraRadian),
+    middleTop + radius * Math.sin(trblaRadian),
+  ]
+
+  return {
+    xRange: [Math.min(...xAxis), Math.max(...xAxis)],
+    yRange: [Math.min(...yAxis), Math.max(...yAxis)],
   }
 }

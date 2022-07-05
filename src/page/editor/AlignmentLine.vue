@@ -1,5 +1,8 @@
 <template>
-  <div class="alignment-line" :style="{ left, top }">
+  <div
+    class="alignment-line"
+    :style="{ left: axis.x + 'px', top: axis.y + 'px' }"
+  >
     <div :class="['line', type]" :style="sizeStyle"></div>
   </div>
 </template>
@@ -22,16 +25,12 @@ export default {
     },
   },
 
-  data() {
-    return {
-      left: 0,
-      top: 0,
-    };
-  },
-
   computed: {
     sizeStyle() {
-      return {};
+      if (this.type === "vertical") {
+        return { height: this.length + "px" };
+      }
+      return { width: this.length + "px" };
     },
   },
 };

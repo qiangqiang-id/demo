@@ -186,7 +186,6 @@ export default {
         this.rotate
       );
       dragAction(e, {
-        init: () => {},
         move: (e) => {
           const { list, data } = multipleScale.handlerScale({
             x: e.clientX - editorAreaInfo.x,
@@ -195,7 +194,6 @@ export default {
           this.rectData = data;
           this.$emit("upload", list);
         },
-        end: () => {},
       });
     },
 

@@ -79,7 +79,6 @@ export default {
         .getBoundingClientRect();
 
       dragAction(event, {
-        init: () => {},
         move: (e) => {
           const data = maskScale.handlerScale({
             x: e.clientX - editorAreaInfo.x,
@@ -88,7 +87,6 @@ export default {
 
           data && this.$emit("update", data);
         },
-        end: () => {},
       });
     },
   },
