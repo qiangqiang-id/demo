@@ -8,20 +8,17 @@ import {
 import ScaleAlignmentLinesHandler from './scaleAlignmentLinesHandler'
 import { ACTOR_LIST } from '../constants'
 export default class ScaleHandler {
-  constructor(rotate, position, maskData, option, selectedIds) {
+  constructor(rotate, position, maskData, option, selectedIds = null) {
     this.data = maskData
     this.position = position
     this.option = option
     this.angle = rotate
-    this.scaleAlignmentLinesHandler = new ScaleAlignmentLinesHandler(
-      ACTOR_LIST,
-      selectedIds,
-      rotate,
-      position
-    )
+    this.scaleAlignmentLinesHandler =
+      selectedIds &&
+      new ScaleAlignmentLinesHandler(ACTOR_LIST, selectedIds, rotate, position)
   }
 
-  handlerScale (mousePosition) {
+  handlerScale(mousePosition) {
     let result = {}
     const { sPoint, proportion, handlePoint } = this.getKeyVariable()
     const { width, height } = this.data
@@ -45,7 +42,6 @@ export default class ScaleHandler {
 
         let newWidth = newBottomRightPoint.x - newTopLeftPoint.x
         let newHeight = newBottomRightPoint.y - newTopLeftPoint.y
-
 
         if (this.option.isLockProportions) {
           // proportion move 前的拖放比例
@@ -91,7 +87,6 @@ export default class ScaleHandler {
 
           newWidth = newBottomRightPoint.x - newTopLeftPoint.x
           newHeight = newBottomRightPoint.y - newTopLeftPoint.y
-
         }
         result = {
           x: newTopLeftPoint.x,
@@ -325,20 +320,36 @@ export default class ScaleHandler {
           this.angle
         )
 
+        const {
+          alignmentLines,
+          x,
+          y,
+          width: w,
+          height: h,
+        } = this.scaleAlignmentLinesHandler.scaleCenterCalcHandler(
+          rotatedMiddlePoint,
+          sPoint,
+          { width, height }
+        )
+        if (x) {
+          result = { x, y, height: h, width: w, alignmentLines }
+          break
+        }
+
         const newHeight = Math.sqrt(
           Math.pow(rotatedMiddlePoint.x - sPoint.x, 2) +
-          Math.pow(rotatedMiddlePoint.y - sPoint.y, 2)
+            Math.pow(rotatedMiddlePoint.y - sPoint.y, 2)
         )
 
         const newCenter = {
           x:
             rotatedMiddlePoint.x -
             (Math.abs(sPoint.x - rotatedMiddlePoint.x) / 2) *
-            (rotatedMiddlePoint.x > sPoint.x ? 1 : -1),
+              (rotatedMiddlePoint.x > sPoint.x ? 1 : -1),
           y:
             rotatedMiddlePoint.y +
             (Math.abs(sPoint.y - rotatedMiddlePoint.y) / 2) *
-            (rotatedMiddlePoint.y > sPoint.y ? -1 : 1),
+              (rotatedMiddlePoint.y > sPoint.y ? -1 : 1),
         }
 
         result = {
@@ -366,20 +377,36 @@ export default class ScaleHandler {
           this.angle
         )
 
+         const {
+          alignmentLines,
+          x,
+          y,
+          width: w,
+          height: h,
+        } = this.scaleAlignmentLinesHandler.scaleCenterCalcHandler(
+          rotatedMiddlePoint,
+          sPoint,
+          { width, height }
+           )
+        if (x) {
+          result = { x, y, height: h, width: w, alignmentLines }
+          break
+        }
+
         const newWidth = Math.sqrt(
           Math.pow(rotatedMiddlePoint.x - sPoint.x, 2) +
-          Math.pow(rotatedMiddlePoint.y - sPoint.y, 2)
+            Math.pow(rotatedMiddlePoint.y - sPoint.y, 2)
         )
 
         const newCenter = {
           x:
             rotatedMiddlePoint.x -
             (Math.abs(sPoint.x - rotatedMiddlePoint.x) / 2) *
-            (rotatedMiddlePoint.x > sPoint.x ? 1 : -1),
+              (rotatedMiddlePoint.x > sPoint.x ? 1 : -1),
           y:
             rotatedMiddlePoint.y +
             (Math.abs(sPoint.y - rotatedMiddlePoint.y) / 2) *
-            (rotatedMiddlePoint.y > sPoint.y ? -1 : 1),
+              (rotatedMiddlePoint.y > sPoint.y ? -1 : 1),
         }
 
         result = {
@@ -396,7 +423,7 @@ export default class ScaleHandler {
     return result
   }
 
-  getKeyVariable () {
+  getKeyVariable() {
     const { x, y, width, height } = this.data
     const center = {
       x: x + width / 2,
@@ -409,11 +436,11 @@ export default class ScaleHandler {
       x:
         center.x +
         Math.abs(handlePoint.x - center.x) *
-        (handlePoint.x < center.x ? 1 : -1),
+          (handlePoint.x < center.x ? 1 : -1),
       y:
         center.y +
         Math.abs(handlePoint.y - center.y) *
-        (handlePoint.y < center.y ? 1 : -1),
+          (handlePoint.y < center.y ? 1 : -1),
     }
 
     return {
@@ -425,7 +452,7 @@ export default class ScaleHandler {
   }
 
   // 获取当前拉动点的位置，拉动过程中可能存在旋转，旋转过的中心点是发生了位置变化的，需要做处理。
-  getPoint (center) {
+  getPoint(center) {
     let point
     const { x, y, height, width } = this.data
 
@@ -492,7 +519,7 @@ export default class ScaleHandler {
     }
   }
   // 检查边界值
-  checkBoundary (result, handlePoint, sPoint) {
+  checkBoundary(result, handlePoint, sPoint) {
     let data = result
     const {
       maxHeight = Infinity,
@@ -664,7 +691,7 @@ export default class ScaleHandler {
     return data
   }
 
-  getWidthAndHeightInBoundar (result, handlePoint, sPoint) {
+  getWidthAndHeightInBoundar(result, handlePoint, sPoint) {
     const {
       maxHeight = Infinity,
       maxWidth = Infinity,
