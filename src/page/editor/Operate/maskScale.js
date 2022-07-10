@@ -4,12 +4,12 @@ import { POSITION } from '../constants';
 import { calcRotatedPoint } from './helper'
 
 export default class MaskScale {
-  constructor(containerStartData, type, isAutoClip = true) {
+  constructor(containerStartData, type, selectedIds, isAutoClip = true) {
     // 父容器的开始位置
     this.startData = { ...containerStartData, }
     this.maskData = { ...containerStartData.mask }
     this.positionType = type
-    this.scaleHandler = new ScaleHandler(containerStartData.rotate, type, this.getMaskInEditerAreaPosition(), { isLockProportions: true })
+    this.scaleHandler = new ScaleHandler(containerStartData.rotate, type, this.getMaskInEditerAreaPosition(), { isLockProportions: true },selectedIds)
     this.rectPosition = this.init(containerStartData)
     this.isAutoClip = isAutoClip
   }
@@ -63,7 +63,8 @@ export default class MaskScale {
 
     return {
       maskData,
-      rectData
+      rectData,
+      alignmentLines: poi.alignmentLines || []
     }
   }
 

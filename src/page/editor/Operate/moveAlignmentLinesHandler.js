@@ -7,7 +7,7 @@ const CANVAS_HEIGHT = 800
 // 吸附距离
 const SORPTION_RANGE = 5
 
-export default class AlignmentLinesHandler {
+export default class MoveAlignmentLinesHandler {
   constructor(elementList, selectedIds, multipleData) {
     this.elementList = elementList
     this.selectedList = deepCopy(this.initSelectedEle(selectedIds))
@@ -41,9 +41,12 @@ export default class AlignmentLinesHandler {
           y: yRange[1]
         }
 
+        const width = rightBottom.x - leftTop.x
+        const height = rightBottom.y - leftTop.y
+
         const center = {
-          x: leftTop.x + mask.width / 2,
-          y: leftTop.y + mask.height / 2
+          x: leftTop.x + width / 2,
+          y: leftTop.y + height / 2
         }
 
         const topLine = { value: leftTop.y, range: [leftTop.x, rightBottom.x] }

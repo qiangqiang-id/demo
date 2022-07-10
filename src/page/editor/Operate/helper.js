@@ -148,7 +148,12 @@ export const getMiddlePoint = (prev, now) => {
 export const uniqAlignLines = (lines) => {
   const uniqLines = []
   lines.forEach(line => {
-    const index = uniqLines.findIndex(_line => _line.value === line.value)
+    const index = uniqLines.findIndex(_line => { 
+      if(line.type) {
+        return _line.value === line.value && _line.type === line.type
+      }
+      return _line.value === line.value
+    })
     if (index === -1) uniqLines.push(line)
     else {
       const uniqLine = uniqLines[index]
@@ -156,6 +161,7 @@ export const uniqAlignLines = (lines) => {
       const rangeMax = Math.max(uniqLine.range[1], line.range[1])
       const range = [rangeMin, rangeMax]
       const _line = { value: line.value, range }
+      if (uniqLine.type) _line.type = uniqLine.type
       uniqLines[index] = _line
     }
   })

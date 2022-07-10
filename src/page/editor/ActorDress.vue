@@ -50,6 +50,10 @@ export default {
       type: Boolean,
       default: true,
     },
+
+    selectedIds: {
+      type: Array,
+    },
   },
 
   data() {
@@ -81,18 +85,23 @@ export default {
 
   methods: {
     dragScale(type, event) {
-      const maskScale = new MaskScale(this.data, type, this.isAutoClip);
+      const maskScale = new MaskScale(
+        this.data,
+        type,
+        this.selectedIds,
+        this.isAutoClip
+      );
 
       dragAction(event, {
         move: (e) => {
-          const { maskData, rectData } = maskScale.handleScale(
+          const { maskData, rectData, alignmentLines } = maskScale.handleScale(
             {
               x: e.x - this.editorAreaInfo.x,
               y: e.y - this.editorAreaInfo.y,
             },
             type
           );
-          this.$emit("update", rectData, maskData);
+          this.$emit("update", rectData, maskData, alignmentLines);
         },
       });
     },

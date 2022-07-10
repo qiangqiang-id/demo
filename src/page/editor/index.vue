@@ -36,6 +36,7 @@
       v-if="!isClip && selectedIds.length === 1"
       @update="updateHandler"
       :data="selectedData"
+      :selectedIds="selectedIds"
     />
 
     <ActorsDress
@@ -68,7 +69,7 @@ import AlignmentLine from "./AlignmentLine.vue";
 import { ACTOR_LIST } from "./constants.js";
 import { OBB, isCollision, Vector2d } from "./Operate/obb";
 import { dragAction } from "./Operate/helper";
-import { AlignmentLinesHandler } from "./Operate";
+import { MoveAlignmentLinesHandler } from "./Operate";
 
 export default {
   naem: "EditorTest",
@@ -237,7 +238,7 @@ export default {
         multipleData = this.$refs.actorsDressRef.rectData;
         multipleData.rotate = this.$refs.actorsDressRef.rotate;
       }
-      const alignmentLinesHandler = new AlignmentLinesHandler(
+      const alignmentLinesHandler = new MoveAlignmentLinesHandler(
         this.actorList,
         this.selectedIds,
         multipleData
@@ -289,11 +290,12 @@ export default {
       data.scale.y = data.scale.y > 0 ? -1 : 1;
     },
 
-    updateHandler(newValue, maskValue) {
+    updateHandler(newValue, maskValue, alignmentLines) {
       const index = this.getIndexById(this.selectedIds[0]);
       const data = this.actorList[index];
       Object.assign(data, newValue);
       maskValue && Object.assign(data.mask, maskValue);
+      this.alignmentLines = alignmentLines;
     },
 
     runPixi() {
