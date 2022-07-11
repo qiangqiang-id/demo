@@ -35,6 +35,7 @@
     <ActorDress
       v-if="!isClip && selectedIds.length === 1"
       @update="updateHandler"
+      @clearAlignmentLines="clearAlignmentLines"
       :data="selectedData"
       :selectedIds="selectedIds"
     />
@@ -45,6 +46,8 @@
       :actors="selectedData"
       @mousedown.native.stop="handleMousedown"
       @upload="multipleUpload"
+      :selectedIds="selectedIds"
+      @clearAlignmentLines="clearAlignmentLines"
     />
 
     <canvas id="my-canvas"></canvas>
@@ -156,13 +159,15 @@ export default {
   },
 
   methods: {
-    multipleUpload(data) {
+    multipleUpload(data, alignmentLines) {
       data.forEach((item) => {
         const index = this.actorList.findIndex(({ id }) => id === item.id);
         if (index > -1) {
           Object.assign(this.actorList[index], item);
         }
       });
+
+      this.alignmentLines = alignmentLines;
     },
 
     handleMoseDowe(e) {
@@ -379,6 +384,10 @@ export default {
 
     closeClip() {
       this.isClip = false;
+    },
+
+    clearAlignmentLines() {
+      this.alignmentLines = [];
     },
   },
 };

@@ -103,6 +103,9 @@ export default {
           );
           this.$emit("update", rectData, maskData, alignmentLines);
         },
+        end: () => {
+          this.$emit("clearAlignmentLines");
+        },
       });
     },
 

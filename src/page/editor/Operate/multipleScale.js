@@ -1,40 +1,40 @@
 import { deepCopy, calcRotatedPoint } from './helper'
-import ScaleHandler  from './scale'
+import ScaleHandler from './scale'
 import { POSITION } from '../constants';
 
 export default class MultipleScale {
 
-  constructor(rectData, type, selectedList,rotate) { 
+  constructor(rectData, type, selectedList, rotate, selectedIds) {
     this.startRectData = deepCopy(rectData)
     this.type = type
     this.selectedList = deepCopy(selectedList)
     this.scaleHandler = new ScaleHandler(rotate, type, this.startRectData, {
-        minWidth: 50,
-        minHeight: 50,
-        isLockProportions: true,
-    });
+      minWidth: 50,
+      minHeight: 50,
+      isLockProportions: true,
+    }, selectedIds);
     this.rotate = rotate
-    
+
   }
 
-  handlerScale(mousePosition) { 
+  handlerScale (mousePosition) {
     const newRectData = this.scaleHandler.handlerScale(mousePosition)
     // 拉伸比例
-    const rateW = newRectData.width / this.startRectData.width 
-    const rateH = newRectData.height / this.startRectData.height 
+    const rateW = newRectData.width / this.startRectData.width
+    const rateH = newRectData.height / this.startRectData.height
     // 拖拽点的对顶点物理坐标
     const rectVerticesPhysics = this.getVerticesPhysics()
-    const  result = []
+    const result = []
     this.selectedList.forEach((item) => {
       const { x: startX, y: startY, mask: startMask, width: startW, height: startH, id } = item
       // mask以画布为基准的位置
       const xMaskStratInCanvas = startX + startMask.x
       const yMaskStratInCanvas = startY + startMask.y
-    
+
       // 原图大小
       const width = startW * rateW;
       const height = startH * rateH;
-       // mask 大小
+      // mask 大小
       const maskW = startMask.width * rateW
       const maskH = startMask.height * rateH
       // mask 在 原图的定位的增长距离
@@ -61,9 +61,17 @@ export default class MultipleScale {
         }
       })
     });
+    const data = {
+      x: newRectData.x,
+      y: newRectData.y,
+      width: newRectData.width,
+      height: newRectData.height,
+    }
+
     return {
       list: result,
-      data:newRectData
+      data,
+      alignmentLines: newRectData.alignmentLines || []
     }
   }
 
@@ -73,38 +81,38 @@ export default class MultipleScale {
       x: x + width / 2,
       y: y + height / 2,
     }
-    switch (this.type) { 
+    switch (this.type) {
       case POSITION.leftTop: {
         const rightBottom = {
           x: x + width,
           y: y + height
         }
-        return calcRotatedPoint(rightBottom,center,this.rotate)
+        return calcRotatedPoint(rightBottom, center, this.rotate)
       }
-        
-      case POSITION.rightBottom: { 
+
+      case POSITION.rightBottom: {
         const leftTop = {
           x,
           y
         }
-        return calcRotatedPoint(leftTop, center,this.rotate)
+        return calcRotatedPoint(leftTop, center, this.rotate)
       }
-        
-      case POSITION.leftBottom: { 
+
+      case POSITION.leftBottom: {
         const rightTop = {
           x: x + width,
           y
         }
         return calcRotatedPoint(rightTop, center, this.rotate)
       }
-        
+
       case POSITION.rightTop: {
         const leftBottom = {
           x,
           y: y + height
         }
-        return calcRotatedPoint(leftBottom,center,this.rotate)
-       }
+        return calcRotatedPoint(leftBottom, center, this.rotate)
+      }
     }
-   }
- }
+  }
+}

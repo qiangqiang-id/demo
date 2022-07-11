@@ -125,52 +125,52 @@ export const ACTOR_LIST = [
       height: 112,
     },
   },
-  // {
-  //   id: 3,
-  //   x: 300,
-  //   y: 300,
-  //   width: 168,
-  //   height: 112,
-  //   rotate: 0,
-  //   url: "https://st0.dancf.com/gaoding-material/0/images/232980/20191108-002232-MrAfZ.jpg",
-  //   scale: {
-  //     x: 1,
-  //     y: 1,
-  //   },
-  //   anchor: {
-  //     x: 0.5,
-  //     y: 0.5,
-  //   },
-  //   mask: {
-  //     x: 0,
-  //     y: 0,
-  //     width: 168,
-  //     height: 112,
-  //   },
-  // },
-  // {
-  //   id: 4,
-  //   x: 400,
-  //   y: 400,
-  //   width: 168,
-  //   height: 112,
-  //   rotate: 0,
-  //   url: "https://st0.dancf.com/gaoding-material/0/images/354321/20200108-213429-GpISr.jpg",
-  //   scale: {
-  //     x: 1,
-  //     y: 1,
-  //   },
-  //   anchor: {
-  //     x: 0.5,
-  //     y: 0.5,
-  //   },
-  //   mask: {
-  //     x: 0,
-  //     y: 0,
-  //     width: 168,
-  //     height: 112,
-  //   },
-  // },
+  {
+    id: 3,
+    x: 300,
+    y: 300,
+    width: 168,
+    height: 112,
+    rotate: 0,
+    url: "https://st0.dancf.com/gaoding-material/0/images/232980/20191108-002232-MrAfZ.jpg",
+    scale: {
+      x: 1,
+      y: 1,
+    },
+    anchor: {
+      x: 0.5,
+      y: 0.5,
+    },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 168,
+      height: 112,
+    },
+  },
+  {
+    id: 4,
+    x: 400,
+    y: 400,
+    width: 168,
+    height: 112,
+    rotate: 0,
+    url: "https://st0.dancf.com/gaoding-material/0/images/354321/20200108-213429-GpISr.jpg",
+    scale: {
+      x: 1,
+      y: 1,
+    },
+    anchor: {
+      x: 0.5,
+      y: 0.5,
+    },
+    mask: {
+      x: 0,
+      y: 0,
+      width: 168,
+      height: 112,
+    },
+  },
 ];
 
 

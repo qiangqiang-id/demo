@@ -274,16 +274,17 @@ export default class ScaleAlignmentLinesHandler {
   getAdsorbentPoint (a, b, isHorizontal, value) {
     // 斜率
     const k = (b.y - a.y) / (b.x - a.x)
-
+       
+    const isValidK = k !== 0 && k !== Infinity && k !== -Infinity
     if (isHorizontal) {
       return {
         y: value,
-        x: (k * a.x - a.y + value) / k,
+        x:isValidK ? (k * a.x - a.y + value) / k : b.x,
       }
     }
     return {
       x: value,
-      y: -(k * (a.x - value) - a.y),
+      y: isValidK ? -(k * (a.x - value) - a.y) : b.y,
     }
   }
 

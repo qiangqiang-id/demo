@@ -66,6 +66,9 @@ export default {
       type: Array,
       default: () => [],
     },
+    selectedIds: {
+      type: Array,
+    },
   },
 
   data() {
@@ -191,16 +194,21 @@ export default {
         this.rectData,
         type,
         this.actors,
-        this.rotate
+        this.rotate,
+        this.selectedIds
       );
       dragAction(e, {
         move: (e) => {
-          const { list, data } = multipleScale.handlerScale({
+          const { list, data, alignmentLines } = multipleScale.handlerScale({
             x: e.clientX - editorAreaInfo.x,
             y: e.clientY - editorAreaInfo.y,
           });
+
           this.rectData = data;
-          this.$emit("upload", list);
+          this.$emit("upload", list, alignmentLines);
+        },
+        end: () => {
+          this.$emit("clearAlignmentLines");
         },
       });
     },
